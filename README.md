@@ -1,3 +1,3 @@
 # Recommender-system-for-the-billiard-game
 
-Reinforcement learning: Billard RL.py
+Reinforcement learning: `Billard_RL.py`
