@@ -1,16 +1,14 @@
-
 import pygame
 import sys
 from math import *
 import random
 import numpy as np
 import time
-
-
+from scipy import sparse
 class Ball:
 	def __init__(self, x, y,speed, color, angle):
-		self.x = x + radius
-		self.y = y + radius
+		self.x = x 
+		self.y = y 
 		self.color = color
 		self.angle = angle
 		self.speed = speed
@@ -84,6 +82,17 @@ def border():
 def close():
 	pygame.quit()
 	sys.exit()
+
+def draw_line(screen,X ,Y, color, angle, width):
+	length = 300
+	# if (angle>90 and angle<180):
+	# 	X_final = -length*np.cos(radians(angle)) + X
+	# else:
+	# 	X_final = length*np.cos(radians(angle)) + X
+	X_final = length*np.cos(radians(angle)) + X
+	Y_final = length*np.sin(radians(angle)) + Y
+	pygame.draw.line(screen, color, [X,Y], [X_final, Y_final], width)
+
 # RL
 def build_q_table(actions):
     table = np.zeros((1, len(actions)))
@@ -95,31 +104,41 @@ def update_qtable(qmatrix, action_index, R, currentState, nextState):
 	return qmatrix
 	
 # Comments for epsilon varying over time and reward = -1 for bad moves 
-def choose_action(qmatrix, nextState):
+def choose_action(qmatrix, currentState, actions):
 	# EPSILON = (time.time() - start_time)/120
 	# print(EPSILON)
-	if (np.random.uniform() > EPSILON) or (np.count_nonzero(qmatrix[nextState]) == 0):
-		action_index = int(np.random.choice(len(qmatrix[0,:]),1))
-		# if qmatrix[nextState, action_index] == -1:
+	if (np.random.uniform() > EPSILON) or (np.count_nonzero(qmatrix[currentState]) == 0):
+		print("random")
+		action_index = int(np.random.choice(len(qmatrix[0,:]),1))  #=> FULL RANDOM
+		# if qmatrix[nextState, action_index] == -1: => FOR REWARD = -1 (TO BE MODIFIED...)
 		# 	print("denied action")
 		# 	action_index = choose_action(qmatrix, nextState)
-		print("random")
 	else:
-		action_index = qmatrix[nextState].argmax()
+		action_index = qmatrix[currentState].argmax()
 	return action_index
 
-def poolTable(qmatrix, actions, action_index, State, State_index, Sindex, ball_pos, episode):
+def poolTable(qmatrix, actions, State, State_index, Sindex, ball_pos, episode, points):
 	loop = True
-	yellowb_pos = (0.3*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)	
-	whiteb_pos = (0.3*(width + 2*margin) - radius, 0.65*(height + 2*margin) - radius)	
-	redb_pos = (0.8*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)
-	init_ball_pos = [yellowb_pos, whiteb_pos, redb_pos]
+	# yellowb_pos = (0.3*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)	
+	# whiteb_pos = (np.random.choice(index_angle)0.3*(width + 2*margin) - radius, 0.65*(height + 2*margin) - radius)	
+	# redb_pos = (0.8*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)
+	# init_ball_pos = [yellowb_pos, whiteb_pos, redb_pos] 
+
+	yellowb_pos = (0.3*(width + 2*margin), 0.5*(height + 2*margin))	
+	whiteb_pos = (0.3*(width + 2*margin), 0.65*(height + 2*margin))	
+	redb_pos = (0.8*(width + 2*margin), 0.5*(height + 2*margin))
+	init_ball_pos = [yellowb_pos, whiteb_pos, redb_pos] 
+	# Keep initial positions for the next episodes
+
+
 	noBalls = 3
 	balls = []
 
 	# for i in range(noBalls):
 	# 	newBall = Ball(random.randrange(0, width - 2*radius), random.randrange(0, height - 2*radius), 10, white, random.randrange(-180, 180))
 	# 	balls.append(newBall)
+	action_index = choose_action(qmatrix, State, actions)
+	# action_index = 677
 
 	white_speed = actions[action_index][0]
 	white_angle = actions[action_index][1]
@@ -127,6 +146,7 @@ def poolTable(qmatrix, actions, action_index, State, State_index, Sindex, ball_p
 	yellowb = Ball(ball_pos[0][0], ball_pos[0][1], 0, yellow, 0)	
 	whiteb = Ball(ball_pos[1][0], ball_pos[1][1], white_speed, white, white_angle)	
 	redb = Ball(ball_pos[2][0], ball_pos[2][1], 0, red, 0)	
+	print("State: %d - action: %d"%(State,action_index))
 	balls.append(yellowb)
 	balls.append(whiteb)
 	balls.append(redb)
@@ -135,12 +155,12 @@ def poolTable(qmatrix, actions, action_index, State, State_index, Sindex, ball_p
 	collWR = False	
 
 	nb_first_ep = 3
-	nb_fast_ep = 60
+	nb_fast_ep = 70
 
 	if (nb_first_ep < episode < nb_fast_ep):
 		pygame.display.set_caption("Episode %d - Fast learning simulation until episode %d to see improvements" % (episode, nb_fast_ep))
 	else: 
-		pygame.display.set_caption("Episode %d" % (episode))
+		pygame.display.set_caption("Episode %d - Points marqués: %d" % (episode,points))
 	while loop:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -149,7 +169,7 @@ def poolTable(qmatrix, actions, action_index, State, State_index, Sindex, ball_p
 				if event.key == pygame.K_q: # => IN qwerty so press A to quit
 					close()		
 				if event.key == pygame.K_r:
-					poolTable(qmatrix, actions, 0, State, State_index, Sindex, ball_pos, episode)
+					poolTable(qmatrix, actions, 0, State, State_index, Sindex, ball_pos, episode, points)
 		if (whiteb.speed == 0 and redb.speed == 0 and yellowb.speed == 0):
 			R = 0
 			nextState = 0
@@ -164,20 +184,20 @@ def poolTable(qmatrix, actions, action_index, State, State_index, Sindex, ball_p
 					nextState = int(State_index[State,action_index])
 				else:
 					nextState = int(State_index[State,action_index])
-
+			print("Next State: %d" %nextState)
 			if R == 1:
+				points += 1
 				qmatrix = update_qtable(qmatrix, action_index, R, State, nextState)
-				action_index = choose_action(qmatrix, nextState)
-				print("Chosen action : %d"%(action_index))
-				print(qmatrix)
-				poolTable(qmatrix,actions, action_index, nextState, State_index, Sindex, ball_pos, episode)
+				# action_index = choose_action(qmatrix, nextState, angle_red, angle_yellow, opening_angle, actions)
+				print(sparse.csr_matrix(qmatrix))
+				poolTable(qmatrix,actions, nextState, State_index, Sindex, ball_pos, episode, points)
 			else:
+				points = 0
 				# qmatrix[State, action_index] = -1
-				action_index = choose_action(qmatrix, nextState)
-				print("Chosen action : %d"%(action_index))
-				print(qmatrix)
+				# action_index = choose_action(qmatrix, nextState, angle_red, angle_yellow, opening_angle, actions)
+				print(sparse.csr_matrix(qmatrix))
 				episode += 1
-				poolTable(qmatrix,actions, action_index, nextState, State_index, Sindex, init_ball_pos, episode)
+				poolTable(qmatrix,actions, nextState, State_index, Sindex, init_ball_pos, episode, points)
 
 		display.fill(background)
 		for i in range(noBalls):
@@ -192,6 +212,8 @@ def poolTable(qmatrix, actions, action_index, State, State_index, Sindex, ball_p
 			collWY = True
 		checkCollision(balls)	
 		border()
+		pygame.draw.line(display, red, list(ball_pos[1]),list(ball_pos[2]))
+		pygame.draw.line(display, yellow, list(ball_pos[1]),list(ball_pos[0]))
 
 
 		pygame.display.update()
@@ -213,7 +235,7 @@ white = (236, 240, 241)
 yellow = (244, 208, 63)
 red = (203, 67, 53)
 green = (40, 180, 99)
-EPSILON = 0.9  # greedy police > 1 - pourcentage de chance de choisir une action aléatoire 
+EPSILON = 1  # greedy police > 1 - pourcentage de chance de choisir une action aléatoire 
 ALPHA = 0.1     # learning rate
 GAMMA = 0.9    # discount factor
 
@@ -222,20 +244,26 @@ friction = 0.01
 
 actions = []
 for i in range(1,11):
-	for j in range(-180,180,5):
+	for j in range(0,360,4):
 		actions.append((i,j))
 # actions = [(10,20),(5,25),(7,30)] good example to understand
 episode = 1
 qmatrix = build_q_table(actions)
-action_index = action_index = int(np.random.choice(len(qmatrix[0,:]),1))
+action_index  = int(np.random.choice(len(qmatrix[0,:]),1))
 print("Initial random first action: %d" %(action_index))
 State = 0
 State_index = np.zeros((1000,len(actions)))
 Sindex = 1
-yellowb_pos = (0.3*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)	
-whiteb_pos = (0.3*(width + 2*margin) - radius, 0.65*(height + 2*margin) - radius)	
-redb_pos = (0.8*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)
+
+# yellowb_pos = (0.3*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)	
+# whiteb_pos = (0.3*(width + 2*margin) - radius, 0.65*(height + 2*margin) - radius)	
+# redb_pos = (0.8*(width + 2*margin) - radius, 0.5*(height + 2*margin) - radius)
+
+yellowb_pos = (0.3*(width + 2*margin), 0.5*(height + 2*margin))	
+whiteb_pos = (0.3*(width + 2*margin), 0.65*(height + 2*margin))	
+redb_pos = (0.8*(width + 2*margin), 0.5*(height + 2*margin))
+
 init_ball_pos = [yellowb_pos, whiteb_pos, redb_pos]
-poolTable(qmatrix, actions, action_index, State, State_index, Sindex, init_ball_pos, episode)
 
-
+points = 0
+poolTable(qmatrix, actions, State, State_index, Sindex, init_ball_pos, episode, points)
