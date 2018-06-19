@@ -20,7 +20,7 @@ HEIGHT_RAILS = 0.0375 #[m]
 MU_s = 0.2 # Sliding friction
 MU_r = 0.016 # Rolling friction
 MU_sp = 0.044 # Spinning friction
-
+#See Paper of W.Leckie p6 => Marlow experimental determination
 # BALLS:
 
 RADIUS = 0.061/2 #[m]
@@ -50,9 +50,10 @@ EPS = 1e-9
 
 if(simulate_cue):
     #CUE
+    #a = 0.5 b = 0 theta = 30 phi = 0 v = 3 => pour bien voir l'effet au roulement
     CUE_MASS = 0.54 # [kg]
-    a = 0.5*RADIUS #ecartement horizontal
-    b = 0*RADIUS #ecartement vertical
+    a = 0.5*RADIUS #ecartement horizontal (a>0 sur la gauche)
+    b = 0*RADIUS #ecartement vertical (b>0 au-dessus)
     theta = 30 #angle vertical (90 = perpendiculaire a la table)
     phi = 0#angle horzontal (0 = visé vers la droite// 90 = vers le haut// -90 = vers la gauche// 180 = vers la gauche)
     #phi = 45 => pb car touche 2 cotés en même temps 
