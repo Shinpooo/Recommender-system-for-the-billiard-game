@@ -8,7 +8,7 @@ def cosinus(x):
 def sinus(x):
     return np.sin(np.deg2rad(x))
 
-simulate_cue = False
+simulate_cue = True
 # TABLE:
 # Dimensions extérieures et surface de jeu pour un Billard 2.80
 

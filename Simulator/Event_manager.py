@@ -86,7 +86,6 @@ def HORIZONTAL_RAIL_COLLISION(ball): #FastFiz equations
 		ball.state = "ROLLING"
 	else:
 		ball.state = "SLIDING"
-	ball.u = vector(0,0,0)
 	return ball
 
 def VERTICAL_RAIL_COLLISION(ball): #FastFiz equations # change?
@@ -98,7 +97,6 @@ def VERTICAL_RAIL_COLLISION(ball): #FastFiz equations # change?
 		ball.state = "ROLLING"
 	else:
 		ball.state = "SLIDING"
-	#ball.u = vector(0,0,0)
 	return ball
 
 	# if ball.state == "SLIDING":
