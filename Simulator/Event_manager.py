@@ -5,7 +5,7 @@ from Parameters import*
 def NEXT_EVENT(ball, time):
 	real_solutions = []
 	# EVENTS = ["SLI2ROL","ROL2STA","VERT_RAIL_COL","VERT_RAIL_COL","VERT_RAIL_COL","VERT_RAIL_COL",
-	# "HORI_RAIL_COL","HORI_RAIL_COL","HORI_RAIL_COL","HORI_RAIL_COL"]
+	# "HORI_RAIL_COL","HORI_RAIL_COL","HORI_RAIL_COL","HORI_RAIL_COL","END_SPIN"]
 	EVENTS = []
 	## TIME END SLIDINGROLLING ##
 	if ball.state == "SLIDING":
@@ -51,6 +51,11 @@ def NEXT_EVENT(ball, time):
 	length_added_sol = len([i for i in solutions if i.imag == 0])
 	EVENTS.extend(["HORI_RAIL_COL" for i in range(length_added_sol)])
 
+	## TIME STOP SPIN
+	time_end_spinning = np.sign(ball.w.z)*2*RADIUS*(ball.w.z)/(5*MU_sp*g)
+	real_solutions.append(time_end_spinning)
+	EVENTS.append("END_SPIN")
+
 	## TIME COLLISION WITH BALL
 	#  ....
 
@@ -75,6 +80,8 @@ def EVENT_PROCESSING(ball, event):
 		ball = VERTICAL_RAIL_COLLISION(ball)
 	elif event == "HORI_RAIL_COL":
 		ball = HORIZONTAL_RAIL_COLLISION(ball)
+	elif event == "END_SPIN":
+		ball.spin = False
 	return ball
 
 def HORIZONTAL_RAIL_COLLISION(ball): #FastFiz equations

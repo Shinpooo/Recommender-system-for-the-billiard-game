@@ -9,4 +9,9 @@ white_ball.v = V0_WHITE
 white_ball.w = W0_WHITE
 white_ball.u = white_ball.v + RADIUS*cross(e_z,white_ball.w)
 white_ball.state = "SLIDING"
+if(abs(white_ball.w.z) > EPS):
+    white_ball.spin = True
+else:
+    white_ball.spin = False
+
 MOVE(white_ball,0)
