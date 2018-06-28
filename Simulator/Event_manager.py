@@ -70,6 +70,77 @@ def NEXT_EVENT(ball, time):
 	#print(min_time)
 	return found_event, min_time
 
+def NEXT_EVENT_BALLS(balls, time):
+	real_solutions = []
+	# EVENTS = ["SLI2ROL","ROL2STA","VERT_RAIL_COL","VERT_RAIL_COL","VERT_RAIL_COL","VERT_RAIL_COL",
+	# "HORI_RAIL_COL","HORI_RAIL_COL","HORI_RAIL_COL","HORI_RAIL_COL","END_SPIN"]
+	EVENTS = []
+	## TIME END SLIDINGROLLING ##
+	for ball in balls:
+		if ball.state != "STATIONNARY":
+			prefix = ball.col
+			if ball.state == "SLIDING":
+				coef_x = 0.5*MU_s*hat(ball.u).x
+				coef_y = 0.5*MU_s*hat(ball.u).y
+				time_end_sliding = 2*mag(ball.u)/(7*MU_s*g)
+				real_solutions.append(time_end_sliding)
+				EVENTS.append(prefix + "SLI2ROL")
+			elif ball.state =="ROLLING":
+				coef_x = (5/14)*MU_r*hat(ball.v).x
+				coef_y = (5/14)*MU_r*hat(ball.v).y
+				time_end_rolling = (7/5)*(mag(ball.v)/(MU_r*g))
+				real_solutions.append(time_end_rolling)
+				EVENTS.append(prefix + "ROL2STA")
+
+			## TIME COLLISION WITH RIGHT RAIL ##
+			p = P([ball.P.x - (SURFACE_LENGTH/2 - RADIUS), ball.v.x, -coef_x*g])
+			solutions = p.roots()
+			real_solutions.extend([i for i in solutions if i.imag == 0])
+			length_added_sol = len([i for i in solutions if i.imag == 0])
+			EVENTS.extend([prefix + "VERT_RAIL_COL" for i in range(length_added_sol)])
+
+			## TIME COLLISION WITH LEFT RAIL ##
+			p = P([ball.P.x - (-SURFACE_LENGTH/2 + RADIUS), ball.v.x, -coef_x*g])
+			solutions = p.roots()
+			real_solutions.extend([i for i in solutions if i.imag == 0])
+			length_added_sol = len([i for i in solutions if i.imag == 0])
+			EVENTS.extend([prefix + "VERT_RAIL_COL" for i in range(length_added_sol)])
+
+			# ## TIME COLLISION WITH UP RAIL ##
+			p = P([ball.P.y - (SURFACE_WIDTH/2 - RADIUS), ball.v.y, -coef_y*g])
+			solutions = p.roots()
+			real_solutions.extend([i for i in solutions if i.imag == 0])
+			length_added_sol = len([i for i in solutions if i.imag == 0])
+			EVENTS.extend([prefix + "HORI_RAIL_COL" for i in range(length_added_sol)])
+
+			# ## TIME COLLISION WITH DOWN RAIL ##
+			p = P([ball.P.y - (-SURFACE_WIDTH/2 + RADIUS), ball.v.y, -coef_y*g])
+			solutions = p.roots()
+			#coef = [-coef*g*hat(ball.u).y,ball.v.y,ball.P.y - (-SURFACE_WIDTH/2 + RADIUS)]
+			#solutions = np.roots(coef)
+			real_solutions.extend([i for i in solutions if i.imag == 0])
+			length_added_sol = len([i for i in solutions if i.imag == 0])
+			EVENTS.extend([prefix + "HORI_RAIL_COL" for i in range(length_added_sol)])
+
+			## TIME STOP SPIN
+			time_end_spinning = np.sign(ball.w.z)*2*RADIUS*(ball.w.z)/(5*MU_sp*g)
+			real_solutions.append(time_end_spinning)
+			EVENTS.append(prefix + "END_SPIN")
+
+			## TIME COLLISION WITH BALL
+			#  ....
+
+	min_time = min(x for x in real_solutions if x > EPS)
+	#print(real_solutions)
+	#print(EVENTS)
+	min_index = real_solutions.index(min_time)
+	found_event = EVENTS[min_index]
+	#print(min_index)
+	#print(min_time)
+	min_time = min_time + time
+	#print(min_time)
+	return found_event, min_time
+
 def EVENT_PROCESSING(ball, event):
 	print(event)
 	if event == "SLI2ROL":
@@ -83,6 +154,21 @@ def EVENT_PROCESSING(ball, event):
 	elif event == "END_SPIN":
 		ball.spin = False
 	return ball
+
+def EVENT_PROCESSING_BALLS(balls, event):
+	print(event)
+	for ball in balls:
+		if event == ball.col + "SLI2ROL":
+			ball.state = "ROLLING"
+		elif event == ball.col + "ROL2STA":
+			ball.state = "STATIONNARY"
+		elif event == ball.col + "VERT_RAIL_COL":
+			ball = VERTICAL_RAIL_COLLISION(ball)
+		elif event == ball.col + "HORI_RAIL_COL":
+			ball = HORIZONTAL_RAIL_COLLISION(ball)
+		elif event == ball.col + "END_SPIN":
+			ball.spin = False
+	return balls
 
 def HORIZONTAL_RAIL_COLLISION(ball): #FastFiz equations
 	ball.v.x = 0.9*ball.v.x

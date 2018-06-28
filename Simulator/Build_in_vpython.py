@@ -67,6 +67,54 @@ def ROLLING(ball, time_start, time_end):
 		%(t,ball.P.x,ball.P.y,ball.P.z,ball.v.x,ball.v.y,ball.v.z,ball.w.x,ball.w.y,ball.w.z,ball.u.x,ball.u.y,ball.u.z,mag(ball.v),mag(ball.w)))
 	return ball
 
+def SLIDING_OR_ROLLING(balls, time_start, time_end):
+    #INITIAL STATE
+	deltat, nb_time_steps = FIND_DELTAT_NBSTEPS(time_start, time_end)
+	ball_init_white = GET_VALUE_AT_START(balls[0])
+	ball_init_yellow = GET_VALUE_AT_START(balls[1])
+	ball_init_red = GET_VALUE_AT_START(balls[2])
+	balls[0].init = ball_init_white
+	balls[1].init = ball_init_yellow
+	balls[2].init = ball_init_red
+	#RENDERING PART
+	for i in range(nb_time_steps + 1):
+		rate(100)
+		t = i*deltat + time_start
+		for ball in balls:
+			if(ball.state == "SLIDING"):
+				ball.pos = ball.init[0] + ball.init[1]*(t - time_start) - 0.5*MU_s*g*((t - time_start)**2)*hat(ball.init[3])
+			elif(ball.state == "ROLLING"):
+				ball.pos = ball.init[0] + ball.init[1]*(t -	 time_start) - (5/14)*MU_r*g*((t - time_start)**2)*hat(ball.init[1])
+	#FINAL STATE
+	for ball in balls:
+		if(ball.state == "SLIDING"):
+			ball.P = ball.init[0] + ball.init[1]*(t - time_start) - 0.5*MU_s*g*((t - time_start)**2)*hat(ball.init[3])
+			ball.v = ball.init[1] - MU_s*g*(t - time_start)*hat(ball.init[3])
+			ball.w = ball.init[2] + 2.5*MU_s*g*(t - time_start)*cross(e_z,hat(ball.init[3]))/RADIUS # Has to be verified (- or + before 2.5 depending on papers)
+			if(ball.spin):
+				ball.w.z = ball.init[2].z - np.sign(ball.init[2].z)*2.5*MU_sp*g*(t - time_start)/RADIUS # Has no efffect (but still to be verified)
+			ball.u = ball.v + RADIUS*cross(e_z, ball.w) #  OR THIS: ball.u = ball_init[3] - 3.5*MU_s*g*t*hat(ball_init[3])
+		elif(ball.state == "ROLLING"):
+			ball.P = ball.init[0] + ball.init[1]*(t - time_start) - (5/14)*MU_r*g*((t - time_start)**2)*hat(ball.init[1])
+			ball.v = ball.init[1] - (5/7)*MU_r*g*(t - time_start)*hat(ball.init[1])
+			ball.w = cross(hat(e_z),ball.v)/RADIUS
+			if(ball.spin):
+				ball.w.z = ball.init[2].z - np.sign(ball.init[2].z)*2.5*MU_sp*g*(t - time_start)/RADIUS # Has no efffect (but still to be verified)
+			ball.u = ball.v + RADIUS*cross(e_z, ball.w) # u remains equal to 0 during rolling
+	return balls
+			
+
+
+def MOVE_BALLS(balls, time):
+	if(balls[0].state == "STATIONNARY" and balls[1].state == "STATIONNARY" and balls[2].state == "STATIONNARY"):
+		print("FIN ALL STATIO")
+	else:
+		event,time_next_ev = NEXT_EVENT_BALLS(balls, time)
+		#print("x = %.6f and y = %.6f"%(ball.P.x,ball.P.y))
+		sleep(1)
+		balls = SLIDING_OR_ROLLING(balls,time,time_next_ev)
+		balls = EVENT_PROCESSING_BALLS(balls, event)
+		MOVE_BALLS(balls, time_next_ev)
 
 
 def MOVE(ball, time):
@@ -86,3 +134,4 @@ def MOVE(ball, time):
 		MOVE(ball, time_next_ev)
 	elif ball.state == "STATIONNARY":
 		print("STATIO")
+		return 0
