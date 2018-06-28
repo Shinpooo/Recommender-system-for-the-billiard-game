@@ -8,7 +8,7 @@ def cosinus(x):
 def sinus(x):
     return np.sin(np.deg2rad(x))
 
-simulate_cue = True
+simulate_cue = False
 # TABLE:
 # Dimensions extérieures et surface de jeu pour un Billard 2.80
 
@@ -30,11 +30,11 @@ g = 9.81 # [m/s²]
 P0_WHITE = vector(-SURFACE_WIDTH/2,0,0)
 P0_YELLOW = vector(-SURFACE_WIDTH/2,- INIT_DIST,0)
 P0_RED = vector(SURFACE_WIDTH/2,0,0)
-V0_WHITE = vector(3,2,0)
-W0_WHITE = vector(45,59,45)
-V0_YELLOW = vector(5,3,0)
+V0_WHITE = vector(2,0,0)
+W0_WHITE = vector(0,0,0)
+V0_YELLOW = vector(5,5,0)
 W0_YELLOW = vector(0,0,0)
-V0_RED = vector(2,0,0)
+V0_RED = vector(7,4,0)
 W0_RED = vector(0,0,0)
 #V0_WHITE = vector(3,2,0)
 #W0_WHITE = vector(45,59,45)

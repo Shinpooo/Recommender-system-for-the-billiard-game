@@ -129,6 +129,71 @@ def NEXT_EVENT_BALLS(balls, time):
 
 			## TIME COLLISION WITH BALL
 			#  ....
+			if ball.col == "WHITE":
+    				######## COLLISION BLANCHE JAUNE ###########
+				if balls[1].state == "SLIDING":
+					coef_x2 = 0.5*MU_s*hat(balls[1].u).x
+					coef_y2 = 0.5*MU_s*hat(balls[1].u).y
+				elif balls[1].state =="ROLLING":
+					coef_x2 = (5/14)*MU_r*hat(balls[1].v).x
+					coef_y2 = (5/14)*MU_r*hat(balls[1].v).y	
+				elif balls[1].state =="STATIONNARY":
+					coef_x2 = 0
+					coef_y2 = 0
+				a = (g**2)*((coef_x - coef_x2)**2 + (coef_y - coef_y2)**2)
+				b = g*(-2*(ball.v.x - balls[1].v.x)*(coef_x - coef_x2) - 2*(ball.v.y - balls[1].v.y)*(coef_y - coef_y2))
+				c = (ball.v.x - balls[1].v.x)**2 - 2*g*(ball.P.x - balls[1].P.x)*(coef_x - coef_x2) + (ball.v.y - balls[1].v.y)**2 - 2*g*(ball.P.y - balls[1].P.y)*(coef_y - coef_y2)
+				d = 2*(ball.P.x - balls[1].P.x)*(ball.v.x - balls[1].v.x) + 2*(ball.P.y - balls[1].P.y)*(ball.v.y - balls[1].v.y)
+				e = (ball.P.x - balls[1].P.x)**2 + (ball.P.y - balls[1].P.y)**2 -4*(RADIUS**2)
+				coef_eq=[a,b,c,d,e]
+				solutions = np.roots(coef_eq)
+				real_solutions.extend([i for i in solutions if i.imag == 0])
+				length_added_sol = len([i for i in solutions if i.imag == 0])
+				EVENTS.extend([prefix + "-YELLOW-BALLBALL" for i in range(length_added_sol)])	
+				###### COLLISION BLANCHE -> ROUGE ########	
+				if balls[2].state == "SLIDING":
+					coef_x2 = 0.5*MU_s*hat(balls[2].u).x
+					coef_y2 = 0.5*MU_s*hat(balls[2].u).y
+				elif balls[2].state =="ROLLING":
+					coef_x2 = (5/14)*MU_r*hat(balls[2].v).x
+					coef_y2 = (5/14)*MU_r*hat(balls[2].v).y	
+				elif balls[2].state =="STATIONNARY":
+					coef_x2 = 0
+					coef_y2 = 0
+				a = (g**2)*((coef_x - coef_x2)**2 + (coef_y - coef_y2)**2)
+				b = g*(-2*(ball.v.x - balls[2].v.x)*(coef_x - coef_x2) - 2*(ball.v.y - balls[2].v.y)*(coef_y - coef_y2))
+				c = (ball.v.x - balls[2].v.x)**2 - 2*g*(ball.P.x - balls[2].P.x)*(coef_x - coef_x2) + (ball.v.y - balls[2].v.y)**2 - 2*g*(ball.P.y - balls[2].P.y)*(coef_y - coef_y2)
+				d = 2*(ball.P.x - balls[2].P.x)*(ball.v.x - balls[2].v.x) + 2*(ball.P.y - balls[2].P.y)*(ball.v.y - balls[2].v.y)
+				e = (ball.P.x - balls[2].P.x)**2 + (ball.P.y - balls[2].P.y)**2 -4*(RADIUS**2)
+				coef_eq=[a,b,c,d,e]
+				solutions = np.roots(coef_eq)
+				real_solutions.extend([i for i in solutions if i.imag == 0])
+				length_added_sol = len([i for i in solutions if i.imag == 0])
+				EVENTS.extend([prefix + "-RED-BALLBALL" for i in range(length_added_sol)])
+
+			if ball.col == "YELLOW":
+    				######## COLLISION JAUNE ROUGE ###########
+				if balls[2].state == "SLIDING":
+					coef_x2 = 0.5*MU_s*hat(balls[2].u).x
+					coef_y2 = 0.5*MU_s*hat(balls[2].u).y
+				elif balls[2].state =="ROLLING":
+					coef_x2 = (5/14)*MU_r*hat(balls[2].v).x
+					coef_y2 = (5/14)*MU_r*hat(balls[2].v).y	
+				elif balls[2].state =="STATIONNARY":
+					coef_x2 = 0
+					coef_y2 = 0
+				a = (g**2)*((coef_x - coef_x2)**2 + (coef_y - coef_y2)**2)
+				b = g*(-2*(ball.v.x - balls[2].v.x)*(coef_x - coef_x2) - 2*(ball.v.y - balls[2].v.y)*(coef_y - coef_y2))
+				c = (ball.v.x - balls[2].v.x)**2 - 2*g*(ball.P.x - balls[2].P.x)*(coef_x - coef_x2) + (ball.v.y - balls[2].v.y)**2 - 2*g*(ball.P.y - balls[2].P.y)*(coef_y - coef_y2)
+				d = 2*(ball.P.x - balls[2].P.x)*(ball.v.x - balls[2].v.x) + 2*(ball.P.y - balls[2].P.y)*(ball.v.y - balls[2].v.y)
+				e = (ball.P.x - balls[2].P.x)**2 + (ball.P.y - balls[2].P.y)**2 -4*(RADIUS**2)
+				coef_eq=[a,b,c,d,e]
+				solutions = np.roots(coef_eq)
+				real_solutions.extend([i for i in solutions if i.imag == 0])
+				length_added_sol = len([i for i in solutions if i.imag == 0])
+				EVENTS.extend([prefix + "-RED-BALLBALL" for i in range(length_added_sol)])
+			
+
 
 	min_time = min(x for x in real_solutions if x > EPS)
 	#print(real_solutions)
