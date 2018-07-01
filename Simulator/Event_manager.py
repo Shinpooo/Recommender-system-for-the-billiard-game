@@ -269,7 +269,42 @@ def VERTICAL_RAIL_COLLISION(ball): #FastFiz equations # change?
 	# 		ball.state = "STATIONNARY"
 
 def BALLS_COLLISION(ball1, ball2): #FastFiz equations #NOT CORRECT -> TO BE CHANGED
-	sleep(1)
+	temp1 = ball1.v.x
+	temp2 = ball2.v.x
+	temp3 = ball1.v.y
+	temp4 = ball2.v.y
+	ball1.v.x = temp2
+	ball1.v.y = temp4
+	ball2.v.x = temp1
+	ball2.v.y = temp3
+
+	temp1 = ball1.w.x
+	temp2 = ball2.w.x
+	temp3 = ball1.w.y
+	temp4 = ball2.w.y
+	ball1.w.x = temp2
+	ball1.w.y = temp4
+	ball2.w.x = temp1
+	ball2.w.y = temp3
+
+	ball1.w.z = 0.1*ball1.w.z
+	ball2.w.z = 0.1*ball2.w.z
+
+	print(ball1.v.x)
+	ball1.u = ball1.v + RADIUS*cross(e_z,ball1.w)
+	ball2.u = ball2.v + RADIUS*cross(e_z,ball2.w)
+
+	if (mag(ball1.u)<1e-6):
+    		ball1.state = "ROLLING"
+	else:
+		ball1.state = "SLIDING"
+	if (mag(ball2.u)<1e-6):
+    		ball2.state = "ROLLING"
+	else:
+		ball2.state = "SLIDING"
+	return ball1, ball2
+
+""" 	sleep(1)
 	ball1.u = ball1.v - ball2.v - cross(RADIUS*e_x, (ball1.w +ball2.w))
 	ball2.u = ball2.v - ball2.v - cross(RADIUS*e_x, (ball1.w +ball2.w))
 	temp1 = ball1.v.x
@@ -291,8 +326,4 @@ def BALLS_COLLISION(ball1, ball2): #FastFiz equations #NOT CORRECT -> TO BE CHAN
 	if (mag(ball2.u)<1e-6):
     		ball2.state = "ROLLING"
 	else:
-		ball2.state = "SLIDING"
-
-	return ball1, ball2
-
-
+		ball2.state = "SLIDING" """
