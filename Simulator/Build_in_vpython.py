@@ -111,7 +111,7 @@ def MOVE_BALLS(balls, time):
 	else:
 		event,time_next_ev = NEXT_EVENT_BALLS(balls, time)
 		#print("x = %.6f and y = %.6f"%(ball.P.x,ball.P.y))
-		sleep(1)
+		#sleep(1)
 		balls = SLIDING_OR_ROLLING(balls,time,time_next_ev)
 		balls = EVENT_PROCESSING_BALLS(balls, event)
 		MOVE_BALLS(balls, time_next_ev)

@@ -22,7 +22,6 @@ MU_r = 0.016 # Rolling friction
 MU_sp = 0.044 # Spinning friction
 #See Paper of W.Leckie p6 => Marlow experimental determination
 # BALLS:
-
 RADIUS = 0.061/2 #[m]
 BALL_MASS = 0.21 #[kg]
 INIT_DIST = 0.163 #[m]
@@ -30,14 +29,15 @@ g = 9.81 # [m/s²]
 P0_WHITE = vector(-SURFACE_WIDTH/2,0,0)
 P0_YELLOW = vector(-SURFACE_WIDTH/2,- INIT_DIST,0)
 P0_RED = vector(SURFACE_WIDTH/2,0,0)
-V0_WHITE = vector(2,0,0)
-W0_WHITE = vector(0,0,0)
-V0_YELLOW = vector(5,5,0)
+V0_WHITE = vector(0,1,0)
+W0_WHITE = vector(0,0,1500)
+V0_YELLOW = vector(0,0,0)
 W0_YELLOW = vector(0,0,0)
 V0_RED = vector(0,0,0)
 W0_RED = vector(0,0,0)
 #V0_WHITE = vector(3,2,0)
 #W0_WHITE = vector(45,59,45)
+ELAST = 0.9 #N(elasticity coef between balls) cf paper => recherche
 
 # COLORS:
 
