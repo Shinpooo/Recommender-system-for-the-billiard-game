@@ -8,7 +8,8 @@ def cosinus(x):
 def sinus(x):
     return np.sin(np.deg2rad(x))
 
-simulate_cue = False
+simulate_cue = True
+render = True
 # TABLE:
 # Dimensions extérieures et surface de jeu pour un Billard 2.80
 
@@ -37,7 +38,7 @@ V0_RED = vector(0,0,0)
 W0_RED = vector(0,0,0)
 #V0_WHITE = vector(3,2,0)
 #W0_WHITE = vector(45,59,45)
-ELAST = 0.9 #N(elasticity coef between balls) cf paper => recherche
+ELAST = 8/9 #N(elasticity coef between balls) cf paper => recherche "Coefficient de restitution" => ivoire : 8/9
 
 # COLORS:
 
@@ -86,6 +87,6 @@ if(simulate_cue):
     W0_WHITE.y = compw_x*sinus(rotation) + compw_y*cosinus(rotation)
     W0_WHITE.z = compw_z
 
-print(W0_WHITE.x)
-print(W0_WHITE.y)
-print(W0_WHITE.z)
+input_scene = canvas(title='Inputs',width=0, height=0)
+box(canvas=input_scene)
+input_scene.append_to_caption("<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,V0_WHITE.x,V0_WHITE.y,V0_WHITE.z,b,W0_WHITE.x,W0_WHITE.y,W0_WHITE.z,theta,phi,V))

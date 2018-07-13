@@ -2,17 +2,18 @@ from Parameters import*
 import math
 from Event_manager import*
 
+
 def BUILD_TABLE():
-	surface = box(pos=vector(0,0,- RADIUS - SURFACE_THICKNESS/2), size=vector(SURFACE_LENGTH,SURFACE_WIDTH, SURFACE_THICKNESS), color= green)
-	Low_side = box(pos=vector(0,-SURFACE_WIDTH/2 - SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH, 2*HEIGHT_RAILS), color = brown)
-	Up_side = box(pos=vector(0,SURFACE_WIDTH/2 + SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH,2*HEIGHT_RAILS), color = brown)
-	R_side = box(pos=vector(SURFACE_LENGTH/2 + SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = brown)
-	L_side = box(pos=vector(-SURFACE_LENGTH/2 - SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = brown)
+	surface = box(canvas=scene, pos=vector(0,0,- RADIUS - SURFACE_THICKNESS/2), size=vector(SURFACE_LENGTH,SURFACE_WIDTH, SURFACE_THICKNESS), color= green)
+	Low_side = box(canvas=scene, pos=vector(0,-SURFACE_WIDTH/2 - SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH, 2*HEIGHT_RAILS), color = brown)
+	Up_side = box(canvas=scene, pos=vector(0,SURFACE_WIDTH/2 + SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH,2*HEIGHT_RAILS), color = brown)
+	R_side = box(canvas=scene, pos=vector(SURFACE_LENGTH/2 + SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = brown)
+	L_side = box(canvas=scene, pos=vector(-SURFACE_LENGTH/2 - SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = brown)
 
 def BUILD_BALLS_INITIAL_STATE():
-	white_ball = sphere(pos=P0_WHITE, radius=RADIUS, color=color.white, make_trail = True)
-	yellow_ball = sphere(pos=P0_YELLOW, radius=RADIUS, color=color.yellow, make_trail = True)
-	red_ball = sphere(pos=P0_RED, radius=RADIUS, color=color.red, make_trail = True)
+	white_ball = sphere(canvas=scene, pos=P0_WHITE, radius=RADIUS, color=color.white, make_trail = True)
+	yellow_ball = sphere(canvas=scene, pos=P0_YELLOW, radius=RADIUS, color=color.yellow, make_trail = True)
+	red_ball = sphere(canvas=scene, pos=P0_RED, radius=RADIUS, color=color.red, make_trail = True)
 	return white_ball, yellow_ball, red_ball
 
 def FIND_DELTAT_NBSTEPS(time_start,time_end, print_ = False):
@@ -68,7 +69,7 @@ def ROLLING(ball, time_start, time_end):
 	return ball
 
 def SLIDING_OR_ROLLING(balls, time_start, time_end):
-    #INITIAL STATE
+	#INITIAL STATE
 	deltat, nb_time_steps = FIND_DELTAT_NBSTEPS(time_start, time_end)
 	ball_init_white = GET_VALUE_AT_START(balls[0])
 	ball_init_yellow = GET_VALUE_AT_START(balls[1])
@@ -76,16 +77,23 @@ def SLIDING_OR_ROLLING(balls, time_start, time_end):
 	balls[0].init = ball_init_white
 	balls[1].init = ball_init_yellow
 	balls[2].init = ball_init_red
-	#RENDERING PART
-	for i in range(nb_time_steps + 1):
-		rate(100)
-		t = i*deltat + time_start
-		for ball in balls:
-			if(ball.state == "SLIDING"):
-				ball.pos = ball.init[0] + ball.init[1]*(t - time_start) - 0.5*MU_s*g*((t - time_start)**2)*hat(ball.init[3])
-			elif(ball.state == "ROLLING"):
-				ball.pos = ball.init[0] + ball.init[1]*(t -	 time_start) - (5/14)*MU_r*g*((t - time_start)**2)*hat(ball.init[1])
+	#RENDERING PART 
+	if render:
+		for i in range(nb_time_steps + 1):
+			rate(100)
+			t = i*deltat + time_start
+			for ball in balls:
+				if(ball.state == "SLIDING"):
+					ball.pos = ball.init[0] + ball.init[1]*(t - time_start) - 0.5*MU_s*g*((t - time_start)**2)*hat(ball.init[3])
+					#ball.v = ball.init[1] - MU_s*g*(t - time_start)*hat(ball.init[3])
+					#print(mag(ball.v))
+				elif(ball.state == "ROLLING"):
+					ball.pos = ball.init[0] + ball.init[1]*(t -	 time_start) - (5/14)*MU_r*g*((t - time_start)**2)*hat(ball.init[1])
+					#ball.v = ball.init[1] - (5/7)*MU_r*g*(t - time_start)*hat(ball.init[1])
+					#print(mag(ball.v))
 	#FINAL STATE
+	else:
+		t = nb_time_steps*deltat + time_start
 	for ball in balls:
 		if(ball.state == "SLIDING"):
 			ball.P = ball.init[0] + ball.init[1]*(t - time_start) - 0.5*MU_s*g*((t - time_start)**2)*hat(ball.init[3])
@@ -107,13 +115,18 @@ def SLIDING_OR_ROLLING(balls, time_start, time_end):
 
 def MOVE_BALLS(balls, time):
 	if(balls[0].state == "STATIONNARY" and balls[1].state == "STATIONNARY" and balls[2].state == "STATIONNARY"):
-		print("FIN ALL STATIO")
+		scene.caption =  "<b>LINEAR SPEED</b> [m/s]\nWHITE: %.3f \nYELLOW: %.3f\nRED: %.3f "%(mag(balls[0].v),mag(balls[1].v),mag(balls[2].v))
+		scene.append_to_caption("\n\n<b>ROTATIONAL SPEED</b> [deg/s]\nWHITE: (%.3f,%.3f,%.3f) - Norm: %.3f\nYELLOW: (%.3f,%.3f,%.3f) - Norm: %.3f\nRED: (%.3f,%.3f,%.3f) - Norm: %.3f"%(balls[0].w.x,balls[0].w.y,balls[0].w.z,mag(balls[0].w),balls[1].w.x,balls[1].w.y,balls[1].w.z,mag(balls[1].w),balls[2].w.x,balls[2].w.y,balls[2].w.z,mag(balls[2].w)))
+		scene.append_to_caption("\n\n<b>NEXT EVENT</b>: None")
 	else:
+		scene.caption =  "<b>LINEAR SPEED</b> [m/s]\nWHITE: %.3f \nYELLOW: %.3f\nRED: %.3f "%(mag(balls[0].v),mag(balls[1].v),mag(balls[2].v))
+		scene.append_to_caption("\n\n<b>ROTATIONAL SPEED</b> [deg/s]\nWHITE: (%.3f,%.3f,%.3f) - Norm: %.3f\nYELLOW: (%.3f,%.3f,%.3f) - Norm: %.3f\nRED: (%.3f,%.3f,%.3f) - Norm: %.3f"%(balls[0].w.x,balls[0].w.y,balls[0].w.z,mag(balls[0].w),balls[1].w.x,balls[1].w.y,balls[1].w.z,mag(balls[1].w),balls[2].w.x,balls[2].w.y,balls[2].w.z,mag(balls[2].w)))
 		event,time_next_ev = NEXT_EVENT_BALLS(balls, time)
-		#print("x = %.6f and y = %.6f"%(ball.P.x,ball.P.y))
-		#sleep(1)
+		scene.append_to_caption("\n\n<b>NEXT EVENT</b>: " + event)
+		#sleep(2)
 		balls = SLIDING_OR_ROLLING(balls,time,time_next_ev)
 		balls = EVENT_PROCESSING_BALLS(balls, event)
+
 		MOVE_BALLS(balls, time_next_ev)
 
 
@@ -121,7 +134,7 @@ def MOVE(ball, time):
 	if ball.state == "SLIDING":
 		event,time_next_ev = NEXT_EVENT(ball, time)
 		#print("x = %.6f and y = %.6f"%(ball.P.x,ball.P.y))
-		sleep(1)
+		#sleep(1)
 		ball = SLIDING(ball,time,time_next_ev)
 		ball = EVENT_PROCESSING(ball, event)
 		MOVE(ball, time_next_ev)

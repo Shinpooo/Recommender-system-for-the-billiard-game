@@ -291,7 +291,7 @@ def RAIL_COLLISION(ball, direction):
 		ball.state = "SLIDING"
 	return ball
 
-def BALLS_COLLISION(ball1, ball2): #FastFiz equations #NOT CORRECT -> TO BE CHANGED
+def BALLS_COLLISION(ball1, ball2):
 	v1_init = ball1.v
 	v2_init = ball2.v
 	w1_init = ball1.w

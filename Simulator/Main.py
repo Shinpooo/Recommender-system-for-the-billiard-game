@@ -1,6 +1,11 @@
 from Build_in_vpython import*
 from vpython import *
 
+#render_scene = canvas(title='Rendering')  
+#info_scene = canvas(title='Informations')
+
+      
+
 BUILD_TABLE()
 white_ball, yellow_ball, red_ball = BUILD_BALLS_INITIAL_STATE()
 
