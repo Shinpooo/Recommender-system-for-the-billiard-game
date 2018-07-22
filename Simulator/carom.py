@@ -4,14 +4,20 @@ import math
 
 class Carom:
     
-    def __init__(self):
+    def __init__(self, render = False):
         Carom.build_table()
         self.white_ball, self.yellow_ball, self.red_ball = Carom.build_balls()
         self.set_balls_init()
-        self.time = 0        
+        self.time = 0
+        self.red_col = 0
+        self.yellow_col =  0
+        self.reward = 0
+        self.render = render   
 
    
     def step(self, a, b, thetha, phi, V):
+        self.red_col = 0
+        self.yellow_col =  0
         c = abs(sqrt(RADIUS**2 - a**2 - b**2))
         F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
         #cf matrice de rotation
@@ -34,10 +40,12 @@ class Carom:
         self.set_ball_color(self.white_ball, "WHITE")
         self.set_ball_state(self.white_ball)
         self.move_balls()
+        self.reward = self.reward + math.floor(self.yellow_col + self.red_col)
 
     def reset(self):
         self.set_balls_init()
         self.time = 0
+        self.reward = 0
 
     def set_balls_init(self):
         self.white_ball.pos = P0_WHITE
@@ -65,6 +73,7 @@ class Carom:
         self.set_ball_spin(self.yellow_ball)
         self.set_ball_spin(self.red_ball)
 
+        
     def render(self):
         pass
 
@@ -137,11 +146,13 @@ class Carom:
             scene.caption =  "<b>LINEAR SPEED</b> [m/s]\nWHITE: %.3f \nYELLOW: %.3f\nRED: %.3f "%(mag(self.white_ball.v),mag(self.yellow_ball.v),mag(self.red_ball.v))
             scene.append_to_caption("\n\n<b>ROTATIONAL SPEED</b> [deg/s]\nWHITE: (%.3f,%.3f,%.3f) - Norm: %.3f\nYELLOW: (%.3f,%.3f,%.3f) - Norm: %.3f\nRED: (%.3f,%.3f,%.3f) - Norm: %.3f"%(self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,mag(self.white_ball.w),self.yellow_ball.w.x,self.yellow_ball.w.y,self.yellow_ball.w.z,mag(self.yellow_ball.w),self.red_ball.w.x,self.red_ball.w.y,self.red_ball.w.z,mag(self.red_ball.w)))
             scene.append_to_caption("\n\n<b>NEXT EVENT</b>: None")
+            scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
         else:
             scene.caption =  "<b>LINEAR SPEED</b> [m/s]\nWHITE: %.3f \nYELLOW: %.3f\nRED: %.3f "%(mag(self.white_ball.v),mag(self.yellow_ball.v),mag(self.red_ball.v))
             scene.append_to_caption("\n\n<b>ROTATIONAL SPEED</b> [deg/s]\nWHITE: (%.3f,%.3f,%.3f) - Norm: %.3f\nYELLOW: (%.3f,%.3f,%.3f) - Norm: %.3f\nRED: (%.3f,%.3f,%.3f) - Norm: %.3f"%(self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,mag(self.white_ball.w),self.yellow_ball.w.x,self.yellow_ball.w.y,self.yellow_ball.w.z,mag(self.yellow_ball.w),self.red_ball.w.x,self.red_ball.w.y,self.red_ball.w.z,mag(self.red_ball.w)))
             event,time_next_ev = self.NEXT_EVENT_BALLS()
             scene.append_to_caption("\n\n<b>NEXT EVENT</b>: " + event)
+            scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
             #sleep(2)
             self.white_ball, self.yellow_ball, self.red_ball = self.SLIDING_OR_ROLLING(time_next_ev)
             self.white_ball, self.yellow_ball, self.red_ball = self.EVENT_PROCESSING_BALLS(event)
@@ -368,7 +379,7 @@ class Carom:
         balls[1].init = ball_init_yellow
         balls[2].init = ball_init_red
         #RENDERING PART 
-        if render:
+        if self.render:
             for i in range(nb_time_steps + 1):
                 rate(100)
                 t = i*deltat + self.time
@@ -402,7 +413,7 @@ class Carom:
         return balls[0],balls[1],balls[2]
 
     def EVENT_PROCESSING_BALLS(self, event):
-        print(event)
+        #print(event)
         balls = []
         balls.append(self.white_ball)
         balls.append(self.yellow_ball)
@@ -428,10 +439,18 @@ class Carom:
                 ball.spin = False
             elif event == ball.col + "-WHITE-BALLBALL":
                 ball, balls[0] = self.BALLS_COLLISION(ball, balls[0])
+                if ball.col == "YELLOW":
+                    self.yellow_col = 0.5
+                elif ball.col == "RED":
+                    self.red_col = 0.5
             elif event == ball.col + "-YELLOW-BALLBALL":
                 ball, balls[1] = self.BALLS_COLLISION(ball, balls[1])
+                if ball.col == "WHITE":
+                    self.yellow_col = 0.5
             elif event == ball.col + "-RED-BALLBALL":
                 ball, balls[2] = self.BALLS_COLLISION(ball, balls[2])
+                if ball.col == "WHITE":
+                    self.red_col = 0.5
         return balls[0], balls[1], balls[2]
     
     def RAIL_COLLISION(self, ball, direction):
