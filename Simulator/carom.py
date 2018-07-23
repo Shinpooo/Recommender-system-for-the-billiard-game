@@ -12,9 +12,12 @@ class Carom:
         self.red_col = 0
         self.yellow_col =  0
         self.reward = 0
+        self.action_reward = 0
         self.render = render   
         self.input_scene = canvas(width=0, height=0)
         box(canvas=self.input_scene)
+        self.observation_list = []
+        
    
     def step(self, a, b, theta, phi, V):
         self.red_col = 0
@@ -43,7 +46,21 @@ class Carom:
         self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
         self.move_balls()
         self.reward = self.reward + math.floor(self.yellow_col + self.red_col)
-
+        self.action_reward = math.floor(self.yellow_col + self.red_col)
+        done = self.action_reward == 0
+        observation = (round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))
+        add_new_state = self.check_new_state(observation)
+        if (add_new_state == True and done == False):
+            self.observation_list.append(observation)
+        if done == False:
+            state = self.observation_list.index(observation)
+        else:
+            state = None
+        return state, self.action_reward, done, add_new_state
+    
+    def check_new_state(self, observation):
+        return observation not in self.observation_list
+        
     def reset(self):
         self.set_balls_init()
         self.time = 0
@@ -150,9 +167,10 @@ class Carom:
             scene.append_to_caption("\n\n<b>NEXT EVENT</b>: None")
             scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
         else:
+            
+            event,time_next_ev = self.NEXT_EVENT_BALLS()
             scene.caption =  "<b>LINEAR SPEED</b> [m/s]\nWHITE: %.3f \nYELLOW: %.3f\nRED: %.3f "%(mag(self.white_ball.v),mag(self.yellow_ball.v),mag(self.red_ball.v))
             scene.append_to_caption("\n\n<b>ROTATIONAL SPEED</b> [deg/s]\nWHITE: (%.3f,%.3f,%.3f) - Norm: %.3f\nYELLOW: (%.3f,%.3f,%.3f) - Norm: %.3f\nRED: (%.3f,%.3f,%.3f) - Norm: %.3f"%(self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,mag(self.white_ball.w),self.yellow_ball.w.x,self.yellow_ball.w.y,self.yellow_ball.w.z,mag(self.yellow_ball.w),self.red_ball.w.x,self.red_ball.w.y,self.red_ball.w.z,mag(self.red_ball.w)))
-            event,time_next_ev = self.NEXT_EVENT_BALLS()
             scene.append_to_caption("\n\n<b>NEXT EVENT</b>: " + event)
             scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
             #sleep(1)
@@ -388,12 +406,12 @@ class Carom:
                 for ball in balls:
                     if(ball.state == "SLIDING"):
                         ball.pos = ball.init[0] + ball.init[1]*(t - self.time) - 0.5*MU_s*g*((t - self.time)**2)*hat(ball.init[3])
-                        ball.v = ball.init[1] - MU_s*g*(t - self.time)*hat(ball.init[3])
-                        print(mag(ball.v))
+                        #ball.v = ball.init[1] - MU_s*g*(t - self.time)*hat(ball.init[3])
+                        #print(mag(ball.v))
                     elif(ball.state == "ROLLING"):
                         ball.pos = ball.init[0] + ball.init[1]*(t -	 self.time) - (5/14)*MU_r*g*((t - self.time)**2)*hat(ball.init[1])
-                        ball.v = ball.init[1] - (5/7)*MU_r*g*(t - self.time)*hat(ball.init[1])
-                        print(mag(ball.v))
+                        #ball.v = ball.init[1] - (5/7)*MU_r*g*(t - self.time)*hat(ball.init[1])
+                        #print(mag(ball.v))
         #FINAL STATE
         else:
             t = nb_time_steps*deltat + self.time

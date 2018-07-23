@@ -18,15 +18,14 @@ g = 9.81 # [m/s²]
 P0_WHITE = vector(-SURFACE_WIDTH/2,0,0)
 P0_YELLOW = vector(-SURFACE_WIDTH/2,- INIT_DIST,0)
 P0_RED = vector(SURFACE_WIDTH/2,0,0)
-V0_WHITE = vector(0,1,0)
-W0_WHITE = vector(0,0,1500)
+V0_WHITE = vector(0,0,0)
+W0_WHITE = vector(0,0,0)
 V0_YELLOW = vector(0,0,0)
 W0_YELLOW = vector(0,0,0)
 V0_RED = vector(0,0,0)
 W0_RED = vector(0,0,0)
-#V0_WHITE = vector(3,2,0)
-#W0_WHITE = vector(45,59,45)
-ELAST = 8/9 #N(elasticity coef between balls) cf paper => recherche "Coefficient de restitution" => ivoire : 8/9
+
+ELAST = 1/2 #N(elasticity coef between balls) cf paper => recherche "Coefficient de restitution" => ivoire : 8/9
 
 # COLORS:
 
