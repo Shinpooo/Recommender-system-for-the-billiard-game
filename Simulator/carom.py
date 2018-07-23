@@ -1,4 +1,4 @@
-from Parameters import*
+from Constants import*
 from numpy.polynomial import Polynomial as P
 import math
 
@@ -13,9 +13,10 @@ class Carom:
         self.yellow_col =  0
         self.reward = 0
         self.render = render   
-
+        self.input_scene = canvas(width=0, height=0)
+        box(canvas=self.input_scene)
    
-    def step(self, a, b, thetha, phi, V):
+    def step(self, a, b, theta, phi, V):
         self.red_col = 0
         self.yellow_col =  0
         c = abs(sqrt(RADIUS**2 - a**2 - b**2))
@@ -39,6 +40,7 @@ class Carom:
         self.set_ball_u(self.white_ball)
         self.set_ball_color(self.white_ball, "WHITE")
         self.set_ball_state(self.white_ball)
+        self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
         self.move_balls()
         self.reward = self.reward + math.floor(self.yellow_col + self.red_col)
 
@@ -99,7 +101,7 @@ class Carom:
 
     @staticmethod
     def build_balls():
-        white_ball = sphere(canvas=scene, pos=P0_WHITE, radius=RADIUS, color=color.white, make_trail = True)
+        white_ball = sphere(canvas=scene, pos=P0_WHITE, radius=RADIUS, color=color.white, make_trail = False)
         yellow_ball = sphere(canvas=scene, pos=P0_YELLOW, radius=RADIUS, color=color.yellow, make_trail = True)
         red_ball = sphere(canvas=scene, pos=P0_RED, radius=RADIUS, color=color.red, make_trail = True)
         return white_ball, yellow_ball, red_ball
@@ -153,7 +155,7 @@ class Carom:
             event,time_next_ev = self.NEXT_EVENT_BALLS()
             scene.append_to_caption("\n\n<b>NEXT EVENT</b>: " + event)
             scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
-            #sleep(2)
+            #sleep(1)
             self.white_ball, self.yellow_ball, self.red_ball = self.SLIDING_OR_ROLLING(time_next_ev)
             self.white_ball, self.yellow_ball, self.red_ball = self.EVENT_PROCESSING_BALLS(event)
             self.time = time_next_ev
@@ -381,17 +383,17 @@ class Carom:
         #RENDERING PART 
         if self.render:
             for i in range(nb_time_steps + 1):
-                rate(100)
+                rate(rate_value)
                 t = i*deltat + self.time
                 for ball in balls:
                     if(ball.state == "SLIDING"):
                         ball.pos = ball.init[0] + ball.init[1]*(t - self.time) - 0.5*MU_s*g*((t - self.time)**2)*hat(ball.init[3])
-                        #ball.v = ball.init[1] - MU_s*g*(t - time_start)*hat(ball.init[3])
-                        #print(mag(ball.v))
+                        ball.v = ball.init[1] - MU_s*g*(t - self.time)*hat(ball.init[3])
+                        print(mag(ball.v))
                     elif(ball.state == "ROLLING"):
                         ball.pos = ball.init[0] + ball.init[1]*(t -	 self.time) - (5/14)*MU_r*g*((t - self.time)**2)*hat(ball.init[1])
-                        #ball.v = ball.init[1] - (5/7)*MU_r*g*(t - time_start)*hat(ball.init[1])
-                        #print(mag(ball.v))
+                        ball.v = ball.init[1] - (5/7)*MU_r*g*(t - self.time)*hat(ball.init[1])
+                        print(mag(ball.v))
         #FINAL STATE
         else:
             t = nb_time_steps*deltat + self.time

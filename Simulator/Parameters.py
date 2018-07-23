@@ -57,36 +57,36 @@ if(simulate_cue):
     #CUE
     #a = 0.5 b = 0 theta = 30 phi = 0 v = 3 => pour bien voir l'effet au roulement
     CUE_MASS = 0.54 # [kg]
-    a = 0.5*RADIUS #ecartement horizontal (a>0 sur la gauche)
-    b = 0*RADIUS #ecartement vertical (b>0 au-dessus)
-    theta = 30 #angle vertical (90 = perpendiculaire a la table)
-    phi = 0#angle horzontal (0 = visé vers la droite// 90 = vers le haut// -90 = vers la gauche// 180 = vers la gauche)
+    #a = 0.5*RADIUS #ecartement horizontal (a>0 sur la gauche)
+    #b = 0*RADIUS #ecartement vertical (b>0 au-dessus)
+    #theta = 30 #angle vertical (90 = perpendiculaire a la table)
+    #phi = 0#angle horzontal (0 = visé vers la droite// 90 = vers le haut// -90 = vers la gauche// 180 = vers la gauche)
     #phi = 45 => pb car touche 2 cotés en même temps 
-    V = 3 #vitesse queue
+    #V = 3 #vitesse queue
     I = (2/5)*BALL_MASS*RADIUS**2 #Moment d'inertie
 
-    c = abs(sqrt(RADIUS**2 - a**2 - b**2))
-    F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
+    # c = abs(sqrt(RADIUS**2 - a**2 - b**2))
+    # F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
 
     #V0_WHITE.x = -F*cosinus(theta)*cosinus(phi)/BALL_MASS
     #V0_WHITE.y = -F*cosinus(theta)*sinus(phi)/BALL_MASS
 
     #cf matrice de rotation
-    rotation = -90 - (180 - phi)
-    compv_x = 0
-    compv_y = -F*cosinus(theta)/BALL_MASS
-    compv_z = 0
-    V0_WHITE.x = compv_x*cosinus(rotation) - compv_y*sinus(rotation)
-    V0_WHITE.y = compv_x*sinus(rotation) + compv_y*cosinus(rotation)
-    V0_WHITE.z = compv_z
+    # rotation = -90 - (180 - phi)
+    # compv_x = 0
+    # compv_y = -F*cosinus(theta)/BALL_MASS
+    # compv_z = 0
+    # V0_WHITE.x = compv_x*cosinus(rotation) - compv_y*sinus(rotation)
+    # V0_WHITE.y = compv_x*sinus(rotation) + compv_y*cosinus(rotation)
+    # V0_WHITE.z = compv_z
 
-    compw_x = (-c*F*sinus(theta) + b*F*cosinus(theta))/I
-    compw_y = a*F*sinus(theta)/I
-    compw_z = -a*F*cosinus(theta)/I
-    W0_WHITE.x = compw_x*cosinus(rotation) - compw_y*sinus(rotation)
-    W0_WHITE.y = compw_x*sinus(rotation) + compw_y*cosinus(rotation)
-    W0_WHITE.z = compw_z
+    # compw_x = (-c*F*sinus(theta) + b*F*cosinus(theta))/I
+    # compw_y = a*F*sinus(theta)/I
+    # compw_z = -a*F*cosinus(theta)/I
+    # W0_WHITE.x = compw_x*cosinus(rotation) - compw_y*sinus(rotation)
+    # W0_WHITE.y = compw_x*sinus(rotation) + compw_y*cosinus(rotation)
+    # W0_WHITE.z = compw_z
 
-input_scene = canvas(title='Inputs',width=0, height=0)
-box(canvas=input_scene)
-input_scene.append_to_caption("<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,V0_WHITE.x,V0_WHITE.y,V0_WHITE.z,b,W0_WHITE.x,W0_WHITE.y,W0_WHITE.z,theta,phi,V))
+# input_scene = canvas(title='Inputs',width=0, height=0)
+# box(canvas=input_scene)
+# input_scene.append_to_caption("<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,V0_WHITE.x,V0_WHITE.y,V0_WHITE.z,b,W0_WHITE.x,W0_WHITE.y,W0_WHITE.z,theta,phi,V))
