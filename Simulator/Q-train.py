@@ -12,7 +12,7 @@ def choose_action(Q, currentState, actions):
     return action_index
 
 
-num_episodes = 500
+num_episodes = 1000
 lr = .8
 y = .95
 env = Carom(render = False)
@@ -32,17 +32,17 @@ for i in range(num_episodes):
     state = 0
     j = 0
     while j < 1:
-        print(sparse.csr_matrix(Q))
+        #print(sparse.csr_matrix(Q))
         action_index = choose_action(Q, state, actions)
         #action_index = int(np.random.choice(len(Q[0,:]),1))
         nextState, reward, done, add_new_state = env.step(actions[action_index][0],actions[action_index][1],actions[action_index][2],actions[action_index][3],actions[action_index][4])
         #state, reward, done, add_new_state = env.step(random.uniform(-0.5, 0.5)*RADIUS,random.uniform(-0.5, 0.5)*RADIUS,random.uniform(0, 50),random.uniform(0, 360),random.uniform(0.5, 6))
+        #print(action_index)
         if done:
             break
         else:
             #print(state, nextState)
             if add_new_state:
-                print("mnt!")
                 newState = np.zeros((1,len(actions)))
                 Q = np.concatenate((Q,newState))
             #Q[state,action_index] = Q[state,action_index]
@@ -51,4 +51,5 @@ for i in range(num_episodes):
             #print(sparse.csr_matrix(Q))
             #print(Q)
             
+np.save("Qmatrix", Q)
 print("Fin")

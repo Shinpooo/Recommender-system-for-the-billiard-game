@@ -16,7 +16,9 @@ class Carom:
         self.render = render   
         self.input_scene = canvas(width=0, height=0)
         box(canvas=self.input_scene)
-        self.observation_list = []
+        self.reward_scene = canvas(width=0, height=0)
+        box(canvas=self.reward_scene)
+        self.observation_list = [(round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))]
         
    
     def step(self, a, b, theta, phi, V):
@@ -56,11 +58,12 @@ class Carom:
             state = self.observation_list.index(observation)
         else:
             state = None
+        self.reward_scene.caption = "\n\n<b>REWARD</b>: %d"%(self.reward)
         return state, self.action_reward, done, add_new_state
     
     def check_new_state(self, observation):
         return observation not in self.observation_list
-        
+            
     def reset(self):
         self.set_balls_init()
         self.time = 0
@@ -93,7 +96,7 @@ class Carom:
         self.set_ball_spin(self.red_ball)
 
         
-    def render(self):
+    def rendering(self):
         pass
 
     def take_action(self):
@@ -165,14 +168,14 @@ class Carom:
             scene.caption =  "<b>LINEAR SPEED</b> [m/s]\nWHITE: %.3f \nYELLOW: %.3f\nRED: %.3f "%(mag(self.white_ball.v),mag(self.yellow_ball.v),mag(self.red_ball.v))
             scene.append_to_caption("\n\n<b>ROTATIONAL SPEED</b> [deg/s]\nWHITE: (%.3f,%.3f,%.3f) - Norm: %.3f\nYELLOW: (%.3f,%.3f,%.3f) - Norm: %.3f\nRED: (%.3f,%.3f,%.3f) - Norm: %.3f"%(self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,mag(self.white_ball.w),self.yellow_ball.w.x,self.yellow_ball.w.y,self.yellow_ball.w.z,mag(self.yellow_ball.w),self.red_ball.w.x,self.red_ball.w.y,self.red_ball.w.z,mag(self.red_ball.w)))
             scene.append_to_caption("\n\n<b>NEXT EVENT</b>: None")
-            scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
+            #scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
         else:
             
             event,time_next_ev = self.NEXT_EVENT_BALLS()
             scene.caption =  "<b>LINEAR SPEED</b> [m/s]\nWHITE: %.3f \nYELLOW: %.3f\nRED: %.3f "%(mag(self.white_ball.v),mag(self.yellow_ball.v),mag(self.red_ball.v))
             scene.append_to_caption("\n\n<b>ROTATIONAL SPEED</b> [deg/s]\nWHITE: (%.3f,%.3f,%.3f) - Norm: %.3f\nYELLOW: (%.3f,%.3f,%.3f) - Norm: %.3f\nRED: (%.3f,%.3f,%.3f) - Norm: %.3f"%(self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,mag(self.white_ball.w),self.yellow_ball.w.x,self.yellow_ball.w.y,self.yellow_ball.w.z,mag(self.yellow_ball.w),self.red_ball.w.x,self.red_ball.w.y,self.red_ball.w.z,mag(self.red_ball.w)))
             scene.append_to_caption("\n\n<b>NEXT EVENT</b>: " + event)
-            scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
+            #scene.append_to_caption("\n\n<b>REWARD</b>: %d"%(self.reward))
             #sleep(1)
             self.white_ball, self.yellow_ball, self.red_ball = self.SLIDING_OR_ROLLING(time_next_ev)
             self.white_ball, self.yellow_ball, self.red_ball = self.EVENT_PROCESSING_BALLS(event)
