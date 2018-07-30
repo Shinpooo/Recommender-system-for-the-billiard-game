@@ -4,20 +4,23 @@ import math
 
 class Carom:
     
-    def __init__(self, render = False):
+    def __init__(self, render = False, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
         Carom.build_table()
-        self.white_ball, self.yellow_ball, self.red_ball = Carom.build_balls()
-        self.set_balls_init()
+        self.white_ball, self.yellow_ball, self.red_ball = Carom.build_balls(pos_white, pos_yellow, pos_red)
+        self.set_balls_init(pos_white, pos_yellow, pos_red)
         self.time = 0
         self.red_col = 0
         self.yellow_col =  0
         self.reward = 0
         self.action_reward = 0
         self.render = render   
+        self.episode = 0
         self.input_scene = canvas(width=0, height=0)
         box(canvas=self.input_scene)
         self.reward_scene = canvas(width=0, height=0)
         box(canvas=self.reward_scene)
+        self.episode_scene = canvas(width=0, height=0)
+        box(canvas=self.episode_scene)
         self.observation_list = [(round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))]
         
    
@@ -64,18 +67,20 @@ class Carom:
     def check_new_state(self, observation):
         return observation not in self.observation_list
             
-    def reset(self):
-        self.set_balls_init()
+    def reset(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
+        self.set_balls_init(pos_white, pos_yellow, pos_red)
         self.time = 0
         self.reward = 0
+        self.episode += 1
+        self.episode_scene.caption = "\n\n<b>EPISODE</b>: %d"%(self.episode)
 
-    def set_balls_init(self):
-        self.white_ball.pos = P0_WHITE
-        self.yellow_ball.pos = P0_YELLOW
-        self.red_ball.pos = P0_RED
-        self.white_ball.P = P0_WHITE
-        self.yellow_ball.P = P0_YELLOW
-        self.red_ball.P = P0_RED
+    def set_balls_init(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
+        self.white_ball.pos = pos_white
+        self.yellow_ball.pos = pos_yellow
+        self.red_ball.pos = pos_red
+        self.white_ball.P = pos_white
+        self.yellow_ball.P = pos_yellow
+        self.red_ball.P = pos_red
         self.white_ball.v = V0_WHITE
         self.yellow_ball.v = V0_YELLOW
         self.red_ball.v = V0_RED
@@ -120,10 +125,10 @@ class Carom:
         L_side = box(canvas=scene, pos=vector(-SURFACE_LENGTH/2 - SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = brown)
 
     @staticmethod
-    def build_balls():
-        white_ball = sphere(canvas=scene, pos=P0_WHITE, radius=RADIUS, color=color.white, make_trail = False)
-        yellow_ball = sphere(canvas=scene, pos=P0_YELLOW, radius=RADIUS, color=color.yellow, make_trail = True)
-        red_ball = sphere(canvas=scene, pos=P0_RED, radius=RADIUS, color=color.red, make_trail = True)
+    def build_balls(pos_white=P0_WHITE, pos_yellow=P0_YELLOW, pos_red = P0_RED):
+        white_ball = sphere(canvas=scene, pos=pos_white, radius=RADIUS, color=color.white, make_trail = False)
+        yellow_ball = sphere(canvas=scene, pos=pos_yellow, radius=RADIUS, color=color.yellow, make_trail = False)
+        red_ball = sphere(canvas=scene, pos=pos_red, radius=RADIUS, color=color.red, make_trail = False)
         return white_ball, yellow_ball, red_ball
 
 # class Physics():
