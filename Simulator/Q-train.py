@@ -11,8 +11,9 @@ def choose_action(Q, currentState, actions):
         action_index = Q[currentState].argmax()
     return action_index
 
-
-num_episodes = 1000
+goal_points = 5
+total_points = 0
+num_episodes = 2000
 lr = .8
 y = .95
 env = Carom(render = False)
@@ -27,7 +28,8 @@ for a in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
 Q = np.zeros((1, len(actions)))
 env.reset()
 #env.step(0,0,0,90,5) #a, b, thetha, phi, Vb
-for i in range(num_episodes):
+#for i in range(num_episodes):
+while total_points < goal_points:
     env.reset()
     state = 0
     j = 0
@@ -43,6 +45,7 @@ for i in range(num_episodes):
         else:
             #print(state, nextState)
             if add_new_state:
+                total_points += 1
                 newState = np.zeros((1,len(actions)))
                 Q = np.concatenate((Q,newState))
             #Q[state,action_index] = Q[state,action_index]
