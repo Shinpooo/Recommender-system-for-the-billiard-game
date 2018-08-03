@@ -100,6 +100,43 @@ class Carom:
         self.reward_scene.caption = "\n\n<b>REWARD</b>: %d"%(self.reward)
         return observation, self.action_reward, done, add_new_state
 
+    def step3(self, a, b, theta, phi, V):
+        self.red_col = 0
+        self.yellow_col =  0
+        c = abs(sqrt(RADIUS**2 - a**2 - b**2))
+        F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
+        #cf matrice de rotation
+        rotation = -90 - (180 - phi)
+        compv_x = 0
+        compv_y = -F*cosinus(theta)/BALL_MASS
+        compv_z = 0
+        self.white_ball.v.x = compv_x*cosinus(rotation) - compv_y*sinus(rotation)
+        self.white_ball.v.y = compv_x*sinus(rotation) + compv_y*cosinus(rotation)
+        self.white_ball.v.z = compv_z
+        ###
+        compw_x = (-c*F*sinus(theta) + b*F*cosinus(theta))/I
+        compw_y = a*F*sinus(theta)/I
+        compw_z = -a*F*cosinus(theta)/I
+        self.white_ball.w.x = compw_x*cosinus(rotation) - compw_y*sinus(rotation)
+        self.white_ball.w.y = compw_x*sinus(rotation) + compw_y*cosinus(rotation)
+        self.white_ball.w.z = compw_z
+        self.set_ball_spin(self.white_ball)
+        self.set_ball_u(self.white_ball)
+        self.set_ball_color(self.white_ball, "WHITE")
+        self.set_ball_state(self.white_ball)
+        self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
+        self.move_balls()
+        self.action_reward = 1/self.get_total_distance()
+        self.reward = self.reward + self.action_reward
+        self.reward_scene.caption = "\n\n<b>ACTION REWARD</b>: %.3f"%(self.action_reward)
+        self.reward_scene.append_to_caption("\n\n<b>CUMULATED EPISODE REWARD</b>: %.3f"%(self.reward))
+        return self.action_reward
+
+    def get_total_distance(self):
+        dist_wy = sqrt((self.white_ball.P.x - self.yellow_ball.P.x)**2 + (self.white_ball.P.y - self.yellow_ball.P.y)**2)
+        dist_wr = sqrt((self.white_ball.P.x - self.red_ball.P.x)**2 + (self.white_ball.P.y - self.red_ball.P.y)**2)
+        dist_yr = sqrt((self.yellow_ball.P.x - self.red_ball.P.x)**2 + (self.yellow_ball.P.y - self.red_ball.P.y)**2)
+        return dist_wy + dist_wr + dist_yr
 
     def check_new_state(self, observation):
         return observation not in self.observation_list

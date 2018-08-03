@@ -71,10 +71,10 @@ while total_points < sum_goal_points:
             #print(action_index)
             if (done == False and level <= goal_points):
                 total_points += 1
+                print("%d/%d points"%(total_points,sum_goal_points))
                 states_list.append(observation)
                 tree_actions_index[level-1,math.floor(i/nb_branches)][a] = action_index
                 break
-        print(tree_actions_index)
 
 np.save("tree_actions_index", tree_actions_index)            
 print("Fin")
