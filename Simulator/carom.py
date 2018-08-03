@@ -148,6 +148,16 @@ class Carom:
         self.episode += 1
         self.episode_scene.caption = "\n\n<b>EPISODE</b>: %d"%(self.episode)
 
+    def get_actions(self):
+        actions = []
+        for a in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
+            for b in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
+                for theta in np.arange(0,50,5):
+                    for phi in np.arange(0,360,20):
+                        for V in np.arange(0.1,6,0.5):
+                            actions.append((a,b,theta,phi,V))
+        return actions
+        
     def set_balls_init(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
         self.white_ball.pos = pos_white
         self.yellow_ball.pos = pos_yellow

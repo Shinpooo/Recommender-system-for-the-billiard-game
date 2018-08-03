@@ -6,15 +6,12 @@ from scipy import sparse
 from Constants import*
 from vpython import*
 import math
-# def choose_action(Q, currentState, actions):
-#     if np.count_nonzero(Q[currentState]) == 0:
-#         action_index = int(np.random.choice(len(Q[0,:]),1))
-#     else:
-#         action_index = Q[currentState].argmax()
-#     return action_index
+import sys
+sys.setrecursionlimit(1000)
+
 
 nb_branches = 2
-goal_points = 3
+goal_points = 7
 total_points = 0
 sum_goal_points = 0
 pos_white = P0_WHITE
@@ -35,13 +32,8 @@ env = Carom(render = False)
 tree_actions_index = np.zeros((goal_points,nb_branches**(goal_points-1)),dtype= myList)
 
 #print(tree_states_index)
-actions = []
-for a in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
-    for b in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
-        for theta in np.arange(0,50,5):
-            for phi in np.arange(0,360,20):
-                for V in np.arange(0.1,6,0.5):
-                    actions.append((a,b,theta,phi,V))
+actions = env.get_actions()
+
 
 states_list = [(pos_white.x,pos_white.y,pos_yellow.x,pos_yellow.y,pos_red.x,pos_red.y)]
 #actions =[(0,0,0,20,4),(0,0,0,130,3),(0,0,0,1,8)]

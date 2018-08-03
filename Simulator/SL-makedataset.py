@@ -15,15 +15,11 @@ def check_superposition(white_pos, yellow_pos, red_pos):
         return True
     else:
         return False
-actions = []
-for a in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
-    for b in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01): #change need to be circular
-        for theta in np.arange(0,50,5):
-            for phi in np.arange(0,360,20):
-                for V in np.arange(0.1,6,0.5):
-                    actions.append((a,b,theta,phi,V))
+
 
 env = Carom(render = False)
+actions = env.get_actions()
+
 X_train = []
 Y_train = [] 
 for w_white in np.linspace(SURFACE_WIDTH/2 - 2*RADIUS, -SURFACE_WIDTH/2 + 2*RADIUS, num=10):

@@ -17,13 +17,8 @@ num_episodes = 2000
 lr = .8
 y = .95
 env = Carom(render = False)
-actions = []
-for a in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
-    for b in np.arange(-0.5*RADIUS,0.5*RADIUS,0.01):
-        for theta in np.arange(0,50,5):
-            for phi in np.arange(0,360,20):
-                for V in np.arange(0.1,6,0.5):
-                    actions.append((a,b,theta,phi,V))
+actions = env.get_actions()
+
 #actions =[(0,0,0,20,4),(0,0,0,130,3),(0,0,0,1,8)]
 Q = np.zeros((1, len(actions)))
 env.reset()
