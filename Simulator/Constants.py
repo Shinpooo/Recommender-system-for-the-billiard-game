@@ -4,7 +4,7 @@ import numpy as np
 SURFACE_LENGTH = 2.54 #[m]
 SURFACE_WIDTH = 1.27 #[m]
 SURFACE_THICKNESS = 0.02 #[m]
-SIDE_LENGTH = 0.15 #[m]
+SIDE_LENGTH = 0.15/2 #[m]
 HEIGHT_RAILS = 0.0375 #[m]
 MU_s = 0.2 # Sliding friction
 MU_r = 0.016 # Rolling friction
@@ -25,7 +25,7 @@ W0_YELLOW = vector(0,0,0)
 V0_RED = vector(0,0,0)
 W0_RED = vector(0,0,0)
 
-ELAST = 1/2 #N(elasticity coef between balls) cf paper => recherche "Coefficient de restitution" => ivoire : 8/9
+ELAST = 0.3 #N(elasticity coef between balls) cf paper => recherche "Coefficient de restitution" => ivoire : 8/9
 
 # COLORS:
 

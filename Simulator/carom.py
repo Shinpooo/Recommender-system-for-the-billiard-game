@@ -50,8 +50,11 @@ class Carom:
         self.set_ball_state(self.white_ball)
         self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
         self.move_balls()
-        self.reward = self.reward + math.floor(self.yellow_col + self.red_col)
         self.action_reward = math.floor(self.yellow_col + self.red_col)
+        if self.action_reward == 1:
+            self.action_reward += 1/self.get_total_distance()
+        self.reward = self.reward + self.action_reward
+        
         done = self.action_reward == 0
         observation = (round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))
         add_new_state = self.check_new_state(observation)
@@ -61,7 +64,7 @@ class Carom:
             state = self.observation_list.index(observation)
         else:
             state = None
-        self.reward_scene.caption = "\n\n<b>REWARD</b>: %d"%(self.reward)
+        self.reward_scene.caption = "\n\n<b>REWARD</b>: %.3f"%(self.reward)
         return state, self.action_reward, done, add_new_state
     
 
@@ -128,9 +131,10 @@ class Carom:
         self.move_balls()
         self.action_reward = 1/self.get_total_distance()
         self.reward = self.reward + self.action_reward
+        coll_reward = math.floor(self.yellow_col + self.red_col)
         self.reward_scene.caption = "\n\n<b>ACTION REWARD</b>: %.3f"%(self.action_reward)
         self.reward_scene.append_to_caption("\n\n<b>CUMULATED EPISODE REWARD</b>: %.3f"%(self.reward))
-        return self.action_reward
+        return self.action_reward, coll_reward
 
     def get_total_distance(self):
         dist_wy = sqrt((self.white_ball.P.x - self.yellow_ball.P.x)**2 + (self.white_ball.P.y - self.yellow_ball.P.y)**2)
@@ -156,6 +160,26 @@ class Carom:
                     for phi in np.arange(0,360,20):
                         for V in np.arange(0.1,6,0.5):
                             actions.append((a,b,theta,phi,V))
+        return actions
+
+    def get_fixed_actions(self):
+        actions = []
+        a = 0
+        b = 0
+        theta = 5
+        for phi in np.arange(0,360,1):
+            for V in np.arange(0.1,6,0.5):
+                actions.append((a,b,theta,phi,V))
+        return actions
+
+    def get_fixed_actions2(self):
+        actions = []
+        a = 0
+        b = 0
+        theta = 5
+        V = 2
+        for phi in np.arange(0,360,1):
+            actions.append((a,b,theta,phi,V))
         return actions
         
     def set_balls_init(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
@@ -202,11 +226,11 @@ class Carom:
 
     @staticmethod
     def build_table():
-        surface = box(canvas=scene, pos=vector(0,0,- RADIUS - SURFACE_THICKNESS/2), size=vector(SURFACE_LENGTH,SURFACE_WIDTH, SURFACE_THICKNESS), color= green)
-        Low_side = box(canvas=scene, pos=vector(0,-SURFACE_WIDTH/2 - SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH, 2*HEIGHT_RAILS), color = brown)
-        Up_side = box(canvas=scene, pos=vector(0,SURFACE_WIDTH/2 + SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH,2*HEIGHT_RAILS), color = brown)
-        R_side = box(canvas=scene, pos=vector(SURFACE_LENGTH/2 + SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = brown)
-        L_side = box(canvas=scene, pos=vector(-SURFACE_LENGTH/2 - SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = brown)
+        surface = box(canvas=scene, pos=vector(0,0,- RADIUS - SURFACE_THICKNESS/2), size=vector(SURFACE_LENGTH,SURFACE_WIDTH, SURFACE_THICKNESS), color= vector(65/255,127/255,228/255))
+        Low_side = box(canvas=scene, pos=vector(0,-SURFACE_WIDTH/2 - SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH, 2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
+        Up_side = box(canvas=scene, pos=vector(0,SURFACE_WIDTH/2 + SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH,2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
+        R_side = box(canvas=scene, pos=vector(SURFACE_LENGTH/2 + SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
+        L_side = box(canvas=scene, pos=vector(-SURFACE_LENGTH/2 - SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
 
     @staticmethod
     def build_balls(pos_white=P0_WHITE, pos_yellow=P0_YELLOW, pos_red = P0_RED):
@@ -493,17 +517,18 @@ class Carom:
         #RENDERING PART 
         if self.render:
             for i in range(nb_time_steps + 1):
+                #sleep(0.1)
                 rate(rate_value)
                 t = i*deltat + self.time
                 for ball in balls:
                     if(ball.state == "SLIDING"):
                         ball.pos = ball.init[0] + ball.init[1]*(t - self.time) - 0.5*MU_s*g*((t - self.time)**2)*hat(ball.init[3])
                         #ball.v = ball.init[1] - MU_s*g*(t - self.time)*hat(ball.init[3])
-                        #print(mag(ball.v))
+                        #print(mag(ball.v)," Slide")
                     elif(ball.state == "ROLLING"):
                         ball.pos = ball.init[0] + ball.init[1]*(t -	 self.time) - (5/14)*MU_r*g*((t - self.time)**2)*hat(ball.init[1])
                         #ball.v = ball.init[1] - (5/7)*MU_r*g*(t - self.time)*hat(ball.init[1])
-                        #print(mag(ball.v))
+                        #print(mag(ball.v)," Roll")
         #FINAL STATE
         else:
             t = nb_time_steps*deltat + self.time

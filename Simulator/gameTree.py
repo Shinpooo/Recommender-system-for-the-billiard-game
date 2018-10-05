@@ -10,8 +10,8 @@ import sys
 sys.setrecursionlimit(1000)
 
 
-nb_branches = 2
-goal_points = 7
+nb_branches = 3
+goal_points = 5
 total_points = 0
 sum_goal_points = 0
 pos_white = P0_WHITE
