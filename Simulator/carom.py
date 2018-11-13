@@ -1,6 +1,9 @@
 from Constants import*
 from numpy.polynomial import Polynomial as P
 import math
+from gym import spaces
+from gym.utils import seeding
+
 
 class Carom:
     
@@ -15,6 +18,7 @@ class Carom:
         self.action_reward = 0
         self.render = render   
         self.episode = 0
+        self.nb_coups = 0
         self.input_scene = canvas(width=0, height=0)
         box(canvas=self.input_scene)
         self.reward_scene = canvas(width=0, height=0)
@@ -22,11 +26,44 @@ class Carom:
         self.episode_scene = canvas(width=0, height=0)
         box(canvas=self.episode_scene)
         self.observation_list = [(round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))]
+        self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         
-   
-    def step(self, a, b, theta, phi, V):
+        low = np.array([
+            -SURFACE_LENGTH/2 + RADIUS,
+            -SURFACE_WIDTH/2 + RADIUS,
+            -SURFACE_LENGTH/2 + RADIUS,
+            -SURFACE_WIDTH/2 + RADIUS,
+            -SURFACE_LENGTH/2 + RADIUS,
+            -SURFACE_WIDTH/2 + RADIUS])
+        #self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([360, 6]), dtype=np.float32)
+        self.action_space = spaces.Discrete(360)
+        self.observation_space = spaces.Box(low = low, high = -low, dtype=np.float32)
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+    def step(self, action):
+        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+        a = 0
+        b = 0
+        theta = 10
+        #phi = action[0]
+        #V = action[1]
+        phi = action
+        V = 3
+        self.cue_to_ball(a, b, theta, phi, V)
         self.red_col = 0
         self.yellow_col =  0
+        self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
+        self.move_balls()
+        self.nb_coups += 1
+        reward = math.floor(self.yellow_col + self.red_col)
+        done = bool(self.nb_coups == 10)
+        self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
+        return np.array(self.state), reward, done, {}
+
+    def cue_to_ball(self, a, b, theta, phi, V):
         c = abs(sqrt(RADIUS**2 - a**2 - b**2))
         F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
         #cf matrice de rotation
@@ -48,24 +85,48 @@ class Carom:
         self.set_ball_u(self.white_ball)
         self.set_ball_color(self.white_ball, "WHITE")
         self.set_ball_state(self.white_ball)
-        self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
-        self.move_balls()
-        self.action_reward = math.floor(self.yellow_col + self.red_col)
-        if self.action_reward == 1:
-            self.action_reward += 1/self.get_total_distance()
-        self.reward = self.reward + self.action_reward
+    # def step(self, a, b, theta, phi, V):
+    #     self.red_col = 0
+    #     self.yellow_col =  0
+    #     c = abs(sqrt(RADIUS**2 - a**2 - b**2))
+    #     F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
+    #     #cf matrice de rotation
+    #     rotation = -90 - (180 - phi)
+    #     compv_x = 0
+    #     compv_y = -F*cosinus(theta)/BALL_MASS
+    #     compv_z = 0
+    #     self.white_ball.v.x = compv_x*cosinus(rotation) - compv_y*sinus(rotation)
+    #     self.white_ball.v.y = compv_x*sinus(rotation) + compv_y*cosinus(rotation)
+    #     self.white_ball.v.z = compv_z
+    #     ###
+    #     compw_x = (-c*F*sinus(theta) + b*F*cosinus(theta))/I
+    #     compw_y = a*F*sinus(theta)/I
+    #     compw_z = -a*F*cosinus(theta)/I
+    #     self.white_ball.w.x = compw_x*cosinus(rotation) - compw_y*sinus(rotation)
+    #     self.white_ball.w.y = compw_x*sinus(rotation) + compw_y*cosinus(rotation)
+    #     self.white_ball.w.z = compw_z
+    #     self.set_ball_spin(self.white_ball)
+    #     self.set_ball_u(self.white_ball)
+    #     self.set_ball_color(self.white_ball, "WHITE")
+    #     self.set_ball_state(self.white_ball)
+    #     self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
+    #     self.move_balls()
+    #     self.action_reward = math.floor(self.yellow_col + self.red_col)
+    #     if self.action_reward == 1:
+    #         self.action_reward += 1/self.get_total_distance()
+    #     self.reward = self.reward + self.action_reward
         
-        done = self.action_reward == 0
-        observation = (round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))
-        add_new_state = self.check_new_state(observation)
-        if (add_new_state == True and done == False):
-            self.observation_list.append(observation)
-        if done == False:
-            state = self.observation_list.index(observation)
-        else:
-            state = None
-        self.reward_scene.caption = "\n\n<b>REWARD</b>: %.3f"%(self.reward)
-        return state, self.action_reward, done, add_new_state
+    #     done = self.action_reward == 0
+    #     observation = (round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))
+    #     add_new_state = self.check_new_state(observation)
+    #     if (add_new_state == True and done == False):
+    #         self.observation_list.append(observation)
+    #     if done == False:
+    #         state = self.observation_list.index(observation)
+    #     else:
+    #         state = None
+    #     self.reward_scene.caption = "\n\n<b>REWARD</b>: %.3f"%(self.reward)
+    #     return state, self.action_reward, done, add_new_state
     
 
 
@@ -147,10 +208,14 @@ class Carom:
             
     def reset(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
         self.set_balls_init(pos_white, pos_yellow, pos_red)
+        self.set_balls_random()
+        self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         self.time = 0
+        self.nb_coups = 0
         self.reward = 0
         self.episode += 1
         self.episode_scene.caption = "\n\n<b>EPISODE</b>: %d"%(self.episode)
+        return np.array(self.state)
 
     def get_actions(self):
         actions = []
@@ -208,6 +273,26 @@ class Carom:
         self.set_ball_spin(self.yellow_ball)
         self.set_ball_spin(self.red_ball)
 
+    def set_balls_random(self):
+        left = -SURFACE_LENGTH/2 + RADIUS
+        right = -left
+        low = -SURFACE_WIDTH/2 + RADIUS
+        high = - low
+        pos_z = 0
+        pos_white.z = pos.z
+        pos_yellow.z = pos.z
+        pos_red.z = pos.z
+        distance_w_y = 0
+        while(distance_w_y <= 2*RADIUS and distance_w_r <= 2*RADIUS and distance_y_r <= 2*RADIUS):
+            pos_white.x = np.random.uniform(left, right)
+            pos_yellow.x = np.random.uniform(left, right)
+            pos_red.x = np.random.uniform(left, right)
+            pos_white.y = np.random.uniform(low, high)
+            pos_yellow.y = np.random.uniform(low, high)
+            pos_red.y = np.random.uniform(low, high)
+            ######FINISH HERE
+            
+        self.set_balls_init(p_random)
         
     def rendering(self):
         pass
