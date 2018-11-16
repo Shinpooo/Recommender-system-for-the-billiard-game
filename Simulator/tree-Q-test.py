@@ -25,7 +25,7 @@ for i in range(tree_actions_index.shape[0]):
 for level in range(tree_actions_index.shape[0]):
     chosen_branch = choose_branch(Q, state)
     action_index = int(tree_actions_index[level,index2][chosen_branch])
-    reward = env.step3(actions[action_index][0],actions[action_index][1],actions[action_index][2],actions[action_index][3],actions[action_index][4])
+    reward, coll_r = env.step3(actions[action_index][0],actions[action_index][1],actions[action_index][2],actions[action_index][3],actions[action_index][4])
     episode_reward += reward
     index2 = index2*nb_branches + chosen_branch
     nextState = state*nb_branches + chosen_branch + 1

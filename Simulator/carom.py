@@ -3,6 +3,7 @@ from numpy.polynomial import Polynomial as P
 import math
 from gym import spaces
 from gym.utils import seeding
+from copy import deepcopy
 
 
 class Carom:
@@ -35,23 +36,25 @@ class Carom:
             -SURFACE_WIDTH/2 + RADIUS,
             -SURFACE_LENGTH/2 + RADIUS,
             -SURFACE_WIDTH/2 + RADIUS])
-        #self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([360, 6]), dtype=np.float32)
-        self.action_space = spaces.Discrete(360)
+
+        #self.action_space = spaces.Box(low= -180, high=180, shape=(1,), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([360, 6]), dtype=np.float32)
+        #self.action_space = spaces.Discrete(360)
         self.observation_space = spaces.Box(low = low, high = -low, dtype=np.float32)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action):
-        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+    def stepx(self, action):
+        #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         a = 0
         b = 0
         theta = 10
         #phi = action[0]
         #V = action[1]
-        phi = action
-        V = 3
+        phi = np.clip(action, -180, 180)[0]
+        V = np.clip(action, 0, 6)[1]
         self.cue_to_ball(a, b, theta, phi, V)
         self.red_col = 0
         self.yellow_col =  0
@@ -60,6 +63,29 @@ class Carom:
         self.nb_coups += 1
         reward = math.floor(self.yellow_col + self.red_col)
         done = bool(self.nb_coups == 10)
+        self.state = self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y
+        return np.array(self.state), reward, done, {}
+
+    def step(self, action):
+        #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+        #print(action)
+        #action[0] = action[0]*600
+        #print(action)
+        a = 0
+        b = 0
+        theta = 10
+        #phi = action[0]
+        #V = action[1]
+        phi = np.clip(action, -180, 180)[0]
+        V = np.clip(action, 0, 6)[1]
+        self.cue_to_ball(a, b, theta, phi, V)
+        self.red_col = 0
+        self.yellow_col =  0
+        self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
+        self.move_balls()
+        self.nb_coups += 1
+        reward = math.floor(self.yellow_col + self.red_col)
+        done = bool(reward == 1)
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         return np.array(self.state), reward, done, {}
 
@@ -207,8 +233,8 @@ class Carom:
         return observation not in self.observation_list
             
     def reset(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
-        self.set_balls_init(pos_white, pos_yellow, pos_red)
-        self.set_balls_random()
+        #self.set_balls_init(pos_white, pos_yellow, pos_red)
+        #self.set_balls_random()
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         self.time = 0
         self.nb_coups = 0
@@ -278,11 +304,12 @@ class Carom:
         right = -left
         low = -SURFACE_WIDTH/2 + RADIUS
         high = - low
-        pos_z = 0
-        pos_white.z = pos.z
-        pos_yellow.z = pos.z
-        pos_red.z = pos.z
+        pos_white = P0_WHITE #Juste pour mettre sous forme de vecteur
+        pos_yellow = P0_YELLOW
+        pos_red = P0_RED
         distance_w_y = 0
+        distance_w_r = 0
+        distance_y_r = 0
         while(distance_w_y <= 2*RADIUS and distance_w_r <= 2*RADIUS and distance_y_r <= 2*RADIUS):
             pos_white.x = np.random.uniform(left, right)
             pos_yellow.x = np.random.uniform(left, right)
@@ -290,10 +317,14 @@ class Carom:
             pos_white.y = np.random.uniform(low, high)
             pos_yellow.y = np.random.uniform(low, high)
             pos_red.y = np.random.uniform(low, high)
-            ######FINISH HERE
-            
-        self.set_balls_init(p_random)
-        
+            distance_w_y = self.get_distance(pos_white, pos_yellow)
+            distance_w_r = self.get_distance(pos_white, pos_red)
+            distance_y_r = self.get_distance(pos_yellow, pos_red)
+        self.set_balls_init(pos_white, pos_yellow, pos_red)
+
+    def get_distance(self, pos1, pos2):
+        return sqrt((pos1.x - pos2.x)**2 + (pos1.y - pos2.y)**2)
+
     def rendering(self):
         pass
 
