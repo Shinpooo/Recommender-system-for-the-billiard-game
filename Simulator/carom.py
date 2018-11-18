@@ -36,9 +36,11 @@ class Carom:
             -SURFACE_WIDTH/2 + RADIUS,
             -SURFACE_LENGTH/2 + RADIUS,
             -SURFACE_WIDTH/2 + RADIUS])
-
+        #DDGP
         #self.action_space = spaces.Box(low= -180, high=180, shape=(1,), dtype=np.float32)
         self.action_space = spaces.Box(low=np.array([-180, 0]), high=np.array([180, 6]), dtype=np.float32)
+        #self.action_space = spaces.Box(low=np.array([-np.inf, np.inf]), high=np.array([-np.inf, np.inf]), dtype=np.float32)
+        #DQN
         #self.action_space = spaces.Discrete(360)
         self.observation_space = spaces.Box(low = low, high = -low, dtype=np.float32)
 
@@ -52,12 +54,15 @@ class Carom:
         a = 0
         b = 0
         theta = 10
-        #phi = action[0]
-        #V = action[1]
-        phi = np.clip(action, -180, 180)[0]
-        V = np.clip(action, 0, 6)[1]
+        #DQN 
+        #phi = action
+        #V = 5
+        #DDGP
         #phi = np.clip(action, -180, 180)[0]
         #V = np.clip(action, 0, 6)[1]
+        #print(action)
+        phi = np.clip(action, -180, 180)[0]
+        V = np.clip(action, 0, 6)[1]
         self.cue_to_ball(a, b, theta, phi, V)
         self.red_col = 0
         self.yellow_col =  0
