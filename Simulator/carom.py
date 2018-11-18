@@ -38,7 +38,7 @@ class Carom:
             -SURFACE_WIDTH/2 + RADIUS])
 
         #self.action_space = spaces.Box(low= -180, high=180, shape=(1,), dtype=np.float32)
-        self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([360, 6]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([-180, 0]), high=np.array([180, 6]), dtype=np.float32)
         #self.action_space = spaces.Discrete(360)
         self.observation_space = spaces.Box(low = low, high = -low, dtype=np.float32)
 
@@ -46,7 +46,8 @@ class Carom:
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def stepx(self, action):
+    def step(self, action):
+        #print(action)
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         a = 0
         b = 0
@@ -55,18 +56,21 @@ class Carom:
         #V = action[1]
         phi = np.clip(action, -180, 180)[0]
         V = np.clip(action, 0, 6)[1]
+        #phi = np.clip(action, -180, 180)[0]
+        #V = np.clip(action, 0, 6)[1]
         self.cue_to_ball(a, b, theta, phi, V)
         self.red_col = 0
         self.yellow_col =  0
         self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
         self.move_balls()
         self.nb_coups += 1
-        reward = math.floor(self.yellow_col + self.red_col)
+        #reward = math.floor(self.yellow_col + self.red_col)
+        reward = self.yellow_col + self.red_col
         done = bool(self.nb_coups == 10)
-        self.state = self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y
+        self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         return np.array(self.state), reward, done, {}
 
-    def step(self, action):
+    def stepx(self, action):
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         #print(action)
         #action[0] = action[0]*600
@@ -76,16 +80,21 @@ class Carom:
         theta = 10
         #phi = action[0]
         #V = action[1]
-        phi = np.clip(action, -180, 180)[0]
-        V = np.clip(action, 0, 6)[1]
+        phi = np.clip(action*600, -180, 180)[0]
+        V = np.clip(action*7, 0, 6)[1]
         self.cue_to_ball(a, b, theta, phi, V)
+        pos_white = self.white_ball.P
+        pos_yellow = self.yellow_ball.P
+        pos_red = self.red_ball.P
         self.red_col = 0
         self.yellow_col =  0
         self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
         self.move_balls()
         self.nb_coups += 1
-        reward = math.floor(self.yellow_col + self.red_col)
+        #reward = math.floor(self.yellow_col + self.red_col)
+        reward = self.yellow_col + self.red_col
         done = bool(reward == 1)
+        self.set_balls_init(pos_white, pos_yellow, pos_red)
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         return np.array(self.state), reward, done, {}
 
@@ -234,7 +243,7 @@ class Carom:
             
     def reset(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
         #self.set_balls_init(pos_white, pos_yellow, pos_red)
-        #self.set_balls_random()
+        self.set_balls_random()
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         self.time = 0
         self.nb_coups = 0

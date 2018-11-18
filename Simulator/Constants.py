@@ -25,7 +25,7 @@ W0_YELLOW = vector(0,0,0)
 V0_RED = vector(0,0,0)
 W0_RED = vector(0,0,0)
 
-ELAST = 0.5 #N(elasticity coef between balls) cf paper => recherche "Coefficient de restitution" => ivoire : 8/9
+ELAST = 0.3 #N(elasticity coef between balls) cf paper => recherche "Coefficient de restitution" => ivoire : 8/9
 
 # COLORS:
 
