@@ -15,6 +15,7 @@ class Carom:
         self.time = 0
         self.red_col = 0
         self.yellow_col =  0
+        self.rail_col = 0
         self.reward = 0
         self.action_reward = 0
         self.render = render   
@@ -61,17 +62,26 @@ class Carom:
         #phi = np.clip(action, -180, 180)[0]
         #V = np.clip(action, 0, 6)[1]
         #print(action)
+        #phi = action[0]*1000
         phi = np.clip(action, -180, 180)[0]
         V = np.clip(action, 0, 6)[1]
+        #distance_before = self.get_total_distance()
         self.cue_to_ball(a, b, theta, phi, V)
         self.red_col = 0
         self.yellow_col =  0
+        self.rail_col = 0
         self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
         self.move_balls()
         self.nb_coups += 1
         #reward = math.floor(self.yellow_col + self.red_col)
+        #reward = self.yellow_col + self.red_col + self.rail_col/2
         reward = self.yellow_col + self.red_col
-        done = bool(self.nb_coups == 10)
+        # distance_after = self.get_total_distance()
+        # if distance_after >= distance_before:
+        #     reward = 0
+        # else:
+        #     reward = 1*(1 - distance_after/distance_before)
+        done = bool(self.nb_coups == 1)
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         return np.array(self.state), reward, done, {}
 
@@ -249,6 +259,16 @@ class Carom:
     def reset(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
         #self.set_balls_init(pos_white, pos_yellow, pos_red)
         self.set_balls_random()
+        self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
+        self.time = 0
+        self.nb_coups = 0
+        self.reward = 0
+        self.episode += 1
+        self.episode_scene.caption = "\n\n<b>EPISODE</b>: %d"%(self.episode)
+        return np.array(self.state)
+
+    def non_random_reset(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
+        self.set_balls_init(pos_white, pos_yellow, pos_red)
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         self.time = 0
         self.nb_coups = 0
@@ -693,15 +713,23 @@ class Carom:
             elif event == ball.col + "LEFT_RAIL_COL":
                 #ball = VERTICAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "left")
+                if ball == self.white_ball:
+                    self.rail_col = -1
             elif event == ball.col + "RIGHT_RAIL_COL":
                 #ball = VERTICAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "right")
+                if ball == self.white_ball:
+                    self.rail_col = -1
             elif event == ball.col + "UP_RAIL_COL":
                 #ball = HORIZONTAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "up")
+                if ball == self.white_ball:
+                    self.rail_col = -1
             elif event == ball.col + "DOWN_RAIL_COL":
                 #ball = HORIZONTAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "down")
+                if ball == self.white_ball:
+                    self.rail_col = -1
             elif event == ball.col + "END_SPIN":
                 ball.spin = False
             elif event == ball.col + "-WHITE-BALLBALL":

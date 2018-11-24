@@ -1,0 +1,2 @@
+model_checkpoint_path: "critic-model-1b"
+all_model_checkpoint_paths: "critic-model-1b"
