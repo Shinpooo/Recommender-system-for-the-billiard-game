@@ -39,6 +39,7 @@ class Carom:
             -SURFACE_WIDTH/2 + RADIUS])
         #DDGP
         #self.action_space = spaces.Box(low= -180, high=180, shape=(1,), dtype=np.float32)
+        #self.action_space = spaces.Box(low=np.array([-180, 0, 5, -0.5*RADIUS, -0.5*RADIUS]), high=np.array([180, 6, 30, 0.5*RADIUS, 0.5*RADIUS]), dtype=np.float32)
         self.action_space = spaces.Box(low=np.array([-180, 0]), high=np.array([180, 6]), dtype=np.float32)
         #self.action_space = spaces.Box(low=np.array([-np.inf, np.inf]), high=np.array([-np.inf, np.inf]), dtype=np.float32)
         #DQN
@@ -49,12 +50,12 @@ class Carom:
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action):
+    def step(self, action, rand = [], a = 0, b= 0, theta = 10):
         #print(action)
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
-        a = 0
-        b = 0
-        theta = 10
+        # a = 0
+        # b = 0
+        # theta = 10
         #DQN 
         #phi = action
         #V = 5
@@ -65,7 +66,13 @@ class Carom:
         #phi = action[0]*1000
         phi = np.clip(action, -180, 180)[0]
         V = np.clip(action, 0, 6)[1]
+        if type(rand) is np.ndarray:
+            phi = phi + rand[0]
+            V = V + rand[1]
+            if V >= 6:
+                V = 6
         #distance_before = self.get_total_distance()
+        # full parameters :
         self.cue_to_ball(a, b, theta, phi, V)
         self.red_col = 0
         self.yellow_col =  0
@@ -73,17 +80,25 @@ class Carom:
         self.input_scene.caption = "\n\n<b>CUE INPUTS</b>\t\t\t<b>EQUIVALENT BALL IMPULSION</b> \na: %.3f\t\t\t\tv0 = (%.3f,%.3f,%.3f)\nb: %.3f\t\t\t\tw0 = (%.3f,%.3f,%.3f)\ntheta: %.3f\nphi: %.3f\nV: %.3f "%(a,self.white_ball.v.x,self.white_ball.v.y,self.white_ball.v.z,b,self.white_ball.w.x,self.white_ball.w.y,self.white_ball.w.z,theta,phi,V)
         self.move_balls()
         self.nb_coups += 1
-        #reward = math.floor(self.yellow_col + self.red_col)
-        #reward = self.yellow_col + self.red_col + self.rail_col/2
-        reward = self.yellow_col + self.red_col
+        reward = math.floor(self.yellow_col + self.red_col)
+        #reward = self.yellow_col + self.red_col
+        #if self.rail_col <= -2:
+        #    reward = 0#
+        #reward = self.yellow_col + self.red_col
+        # if reward == 0.5:
+        #     reward = 0.1
         # distance_after = self.get_total_distance()
         # if distance_after >= distance_before:
         #     reward = 0
         # else:
         #     reward = 1*(1 - distance_after/distance_before)
+        if reward == 1:
+            print("Phi: %.2f, V: %.2f, a: %.4f, b: %.4f, Theta: %.2f"%(phi, V, a, b, theta))
         done = bool(self.nb_coups == 1)
+        difficulty = - self.rail_col
+        position_reward = self.get_total_distance()
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
-        return np.array(self.state), reward, done, {}
+        return np.array(self.state), reward, done, {}, difficulty, position_reward
 
     def stepx(self, action):
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
@@ -114,7 +129,8 @@ class Carom:
         return np.array(self.state), reward, done, {}
 
     def cue_to_ball(self, a, b, theta, phi, V):
-        c = abs(sqrt(RADIUS**2 - a**2 - b**2))
+        print(phi, V, a, b ,theta)
+        c = abs(sqrt(RADIUS**2 - (RADIUS*a)**2 - (RADIUS*b)**2))
         F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
         #cf matrice de rotation
         rotation = -90 - (180 - phi)
@@ -276,6 +292,12 @@ class Carom:
         self.episode += 1
         self.episode_scene.caption = "\n\n<b>EPISODE</b>: %d"%(self.episode)
         return np.array(self.state)
+
+    def arraystate2pos(self, state):
+        self.white_ball.P = vector(state[0],state[1], 0)
+        self.yellow_ball.P = vector(state[2],state[3], 0)
+        self.red_ball.P = vector(state[4],state[5], 0)
+        return (self.white_ball.P, self.yellow_ball.P, self.red_ball.P)
 
     def get_actions(self):
         actions = []
@@ -714,22 +736,22 @@ class Carom:
                 #ball = VERTICAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "left")
                 if ball == self.white_ball:
-                    self.rail_col = -1
+                    self.rail_col -= 1
             elif event == ball.col + "RIGHT_RAIL_COL":
                 #ball = VERTICAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "right")
                 if ball == self.white_ball:
-                    self.rail_col = -1
+                    self.rail_col -= 1
             elif event == ball.col + "UP_RAIL_COL":
                 #ball = HORIZONTAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "up")
                 if ball == self.white_ball:
-                    self.rail_col = -1
+                    self.rail_col -= 1
             elif event == ball.col + "DOWN_RAIL_COL":
                 #ball = HORIZONTAL_RAIL_COLLISION(ball)
                 ball = self.RAIL_COLLISION(ball, "down")
                 if ball == self.white_ball:
-                    self.rail_col = -1
+                    self.rail_col -= 1
             elif event == ball.col + "END_SPIN":
                 ball.spin = False
             elif event == ball.col + "-WHITE-BALLBALL":

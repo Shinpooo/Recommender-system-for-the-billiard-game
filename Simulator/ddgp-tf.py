@@ -6,6 +6,8 @@ The algorithm is tested on the Pendulum-v0 OpenAI gym task
 and developed with tflearn + Tensorflow
 Author: Patrick Emami
 """
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
 import gym
@@ -276,9 +278,9 @@ def train(sess, env, args, actor, critic, actor_noise = None, load = True, plot_
 
     # Initialize replay memory
     replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
-    # demo = np.load("demoTable.npy")
-    # for i in range(demo.shape[0]):
-    #     replay_buffer.add(demo[i][0], demo[i][1], demo[i][2],True, demo[i][3])
+    demo = np.load("demoTable.npy")
+    for i in range(demo.shape[0]):
+        replay_buffer.add(demo[i][0], demo[i][1], demo[i][2],True, demo[i][3])
     #replay_buffer.add
     # Needed to enable BatchNorm. 
     # This hurts the performance on Pendulum but could be useful
@@ -309,7 +311,7 @@ def train(sess, env, args, actor, critic, actor_noise = None, load = True, plot_
             s2, r, terminal, info = env.step(a[0])
 
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
-                              terminal, np.reshape(s2, (actor.s_dim,)))
+                               terminal, np.reshape(s2, (actor.s_dim,)))
 
             # Keep adding experience to the memory until
             # there are at least minibatch size samples
@@ -358,7 +360,7 @@ def train(sess, env, args, actor, critic, actor_noise = None, load = True, plot_
 
                 print('| Reward: {:.2f} | Episode: {:d} | Qmax: {:.4f} | mean reward: {:.4f} | mean reward wo reset: {:.4f}'.format(float(ep_reward), \
                         i, (ep_ave_max_q / float(j+1)), mean_reward/float(i%mean_reset + 1), mean_reward_/float(i + 1)))
-                plt.plot(i, mean_reward/float(i%mean_reset + 1),'bo', label = 'mean reward lasts ep')
+                #plt.plot(i, mean_reward/float(i%mean_reset + 1),'bo', label = 'mean reward lasts ep')
                 plt.plot(i, mean_reward_/float(i + 1), 'r^', label = 'Overall mean reward')
                 
                 if j == 0 and i == 0:
@@ -402,11 +404,11 @@ def main(args):
         load = False
         plot_anim = False
         if load:
-            actor.saver.restore(sess, './actor-model-1b')
-            critic.saver.restore(sess, './critic-model-1b')
+            actor.saver.restore(sess, './actor-model-2b')
+            critic.saver.restore(sess, './critic-model-2b')
         train(sess, env, args, actor, critic, actor_noise, load, plot_anim)
-        actor.saver.save(sess, './actor-model-1b')
-        critic.saver.save(sess, './critic-model-1b')    
+        actor.saver.save(sess, './actor-model-2b')
+        critic.saver.save(sess, './critic-model-2b')    
         if args['use_gym_monitor']:
             env.monitor.close()
 
@@ -414,7 +416,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='provide arguments for DDPG agent')
 
     # agent parameters
-    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.0001)
+    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.001)
     parser.add_argument('--critic-lr', help='critic network learning rate', default=0.001)
     parser.add_argument('--gamma', help='discount factor for critic updates', default=0.99)
     parser.add_argument('--tau', help='soft target update parameter', default=0.001)
@@ -424,7 +426,7 @@ if __name__ == '__main__':
     # run parameters
     parser.add_argument('--env', help='choose the gym env- tested on {Pendulum-v0}', default='Pendulum-v0')
     parser.add_argument('--random-seed', help='random seed for repeatability', default=1234)
-    parser.add_argument('--max-episodes', help='max num of episodes to do while training', default=50000)
+    parser.add_argument('--max-episodes', help='max num of episodes to do while training', default=200000)
     parser.add_argument('--max-episode-len', help='max length of 1 episode', default=1000)
     parser.add_argument('--render-env', help='render the gym env', action='store_false', default= False)
     parser.add_argument('--use-gym-monitor', help='record gym results', action='store_false', default = False)

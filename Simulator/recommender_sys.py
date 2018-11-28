@@ -1,16 +1,12 @@
-
-import numpy as np
 import gym
-from carom import Carom
-
-from keras.models import Sequential, Model
-from keras.layers import Dense, Activation, Flatten, Input, Concatenate
+import numpy as np
+from keras.layers import Activation, Concatenate, Dense, Flatten, Input
+from keras.models import Model, Sequential
 from keras.optimizers import Adam
-
 from rl.agents import DDPGAgent
 from rl.memory import *
-from rl.random import OrnsteinUhlenbeckProcess
 
+from carom import Carom
 
 ENV_NAME = 'Carom-v0'
 gym.undo_logger_setup()
@@ -34,7 +30,6 @@ actor.add(Dense(16))
 actor.add(Activation('relu'))
 actor.add(Dense(nb_actions))
 actor.add(Activation('linear'))
-print(actor.summary())
 
 action_input = Input(shape=(nb_actions,), name='action_input')
 observation_input = Input(shape=(1,) + env.observation_space.shape, name='observation_input')
@@ -49,27 +44,29 @@ x = Activation('relu')(x)
 x = Dense(1)(x)
 x = Activation('linear')(x)
 critic = Model(inputs=[action_input, observation_input], outputs=x)
-print(critic.summary())
-demo = np.load("demoTable.npy")
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
-# even the metrics!
+
 memory = SequentialMemory(limit=50000, window_length=1)
-# for i in range(demo.shape[0]):
-#     memory.append(observation = demo[i][0], action = demo[i][1], reward = demo[i][2], terminal= True)
-random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=.15, mu=0, sigma=.3)
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100, gamma=.99, target_model_update=1e3)
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
-#agent.load_weights('ddpg_{}_2balls_final_weights_v4.h5f'.format(ENV_NAME))
+agent.load_weights('ddpg_{}_2balls_final_weights_v4.h5f'.format(ENV_NAME))
 
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.,
-agent.fit(env, nb_steps=100000, visualize=False, verbose=1, nb_max_episode_steps=1)
+# state = env.reset()
+# pos = env.arraystate2pos(state)
+# optimal_action = np.zeros(2)
+# optimal_action[0], optimal_action[1], a, b, theta = agent.test(env, nb_episodes=500000, visualize=False, nb_max_episode_steps=200, modif = True, pos = pos)
 
-# After training is done, we save the final weights.
-agent.save_weights('ddpg_{}_1balls_5params_weights_v5.h5f'.format(ENV_NAME), overwrite=True)
+# env.non_random_reset(pos[0], pos[1], pos[2])
+# env.render = True
+# env.step(optimal_action, a = a, b = b, theta = theta)
 
-# Finally, evaluate our algorithm for 5 episodes.
-env.render = True
-agent.test(env, nb_episodes=10, visualize=False, nb_max_episode_steps=200, modif = False)
+nb_test = 50
+for i in range(nb_test):
+    env.render = False
+    state = env.reset()
+    pos = env.arraystate2pos(state)
+    optimal_action = np.zeros(2)
+    action, optimal_action, a, b, theta = agent.test(env, nb_episodes=500000, visualize=False, nb_max_episode_steps=200, modif = True, pos = pos)
+    env.non_random_reset(pos[0], pos[1], pos[2])
+    env.render = True
+    env.step(action, rand = optimal_action, a = a, b = b, theta = theta)
