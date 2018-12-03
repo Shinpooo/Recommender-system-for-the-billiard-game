@@ -9,10 +9,13 @@ from copy import deepcopy
 class Carom:
     
     def __init__(self, render = False, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
-        Carom.build_table()
+        self.build_table()
         self.white_ball, self.yellow_ball, self.red_ball = Carom.build_balls(pos_white, pos_yellow, pos_red)
         self.set_balls_init(pos_white, pos_yellow, pos_red)
         self.time = 0
+        self.drag_white = False
+        self.drag_yellow = False
+        self.drag_red = False
         self.red_col = 0
         self.yellow_col =  0
         self.rail_col = 0
@@ -50,7 +53,7 @@ class Carom:
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action, rand = [], a = 0, b= 0, theta = 10):
+    def step(self, action, rand = [], a = 0, b = 0, theta = 10):
         #print(action)
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         # a = 0
@@ -129,8 +132,9 @@ class Carom:
         return np.array(self.state), reward, done, {}
 
     def cue_to_ball(self, a, b, theta, phi, V):
-        print(phi, V, a, b ,theta)
-        c = abs(sqrt(RADIUS**2 - (RADIUS*a)**2 - (RADIUS*b)**2))
+        a = a*RADIUS
+        b = b*RADIUS
+        c = abs(sqrt(RADIUS**2 - a**2 - b**2))
         F = 2*BALL_MASS*V/(1 + BALL_MASS/CUE_MASS + (5/(2*RADIUS**2))*(a**2 + (b*cosinus(theta))**2 + (c*sinus(theta))**2 - 2*b*c*cosinus(theta)*sinus(theta)))
         #cf matrice de rotation
         rotation = -90 - (180 - phi)
@@ -381,14 +385,7 @@ class Carom:
     def get_distance(self, pos1, pos2):
         return sqrt((pos1.x - pos2.x)**2 + (pos1.y - pos2.y)**2)
 
-    def rendering(self):
-        pass
 
-    def take_action(self):
-        pass
-    
-    def get_reward(self):
-        pass
 
 
 
@@ -396,13 +393,16 @@ class Carom:
 #     def __init__(self):
 #         pass
 
-    @staticmethod
-    def build_table():
+    def build_table(self):
         surface = box(canvas=scene, pos=vector(0,0,- RADIUS - SURFACE_THICKNESS/2), size=vector(SURFACE_LENGTH,SURFACE_WIDTH, SURFACE_THICKNESS), color= vector(65/255,127/255,228/255))
         Low_side = box(canvas=scene, pos=vector(0,-SURFACE_WIDTH/2 - SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH, 2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
         Up_side = box(canvas=scene, pos=vector(0,SURFACE_WIDTH/2 + SIDE_LENGTH/2,-RADIUS), size=vector(SURFACE_LENGTH + 2*SIDE_LENGTH, SIDE_LENGTH,2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
         R_side = box(canvas=scene, pos=vector(SURFACE_LENGTH/2 + SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
         L_side = box(canvas=scene, pos=vector(-SURFACE_LENGTH/2 - SIDE_LENGTH/2,0,-RADIUS), size=vector(SIDE_LENGTH, SURFACE_WIDTH,2*HEIGHT_RAILS), color = vector(38/255, 72/255, 143/255))
+        scene.bind("mousedown", self.down)
+        scene.bind("mousemove", self.move)
+        scene.bind("mouseup", self.up)
+        drag_white = False
 
     @staticmethod
     def build_balls(pos_white=P0_WHITE, pos_yellow=P0_YELLOW, pos_red = P0_RED):
@@ -411,9 +411,153 @@ class Carom:
         red_ball = sphere(canvas=scene, pos=pos_red, radius=RADIUS, color=color.red, make_trail = False)
         return white_ball, yellow_ball, red_ball
 
+
+    def down(self, evt):
+        loc = evt.pos
+        if self.white_ball.pos.x - RADIUS <= loc.x <= self.white_ball.pos.x + RADIUS and self.white_ball.pos.y - RADIUS <= loc.y <= self.white_ball.pos.y + RADIUS:
+            self.drag_white = True
+        elif self.yellow_ball.pos.x - RADIUS <= loc.x <= self.yellow_ball.pos.x + RADIUS and self.yellow_ball.pos.y - RADIUS <= loc.y <= self.yellow_ball.pos.y + RADIUS:
+            self.drag_yellow = True
+        elif self.red_ball.pos.x - RADIUS <= loc.x <= self.red_ball.pos.x + RADIUS and self.red_ball.pos.y - RADIUS <= loc.y <= self.red_ball.pos.y + RADIUS:
+            self.drag_red = True
+
+
+    def move(self):
+        # WHITE
+        if self.drag_white: # mouse button is down
+            if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS: #right
+                self.white_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                if scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS:
+                    self.white_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS:
+                    self.white_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                else:
+                    self.white_ball.pos.y = scene.mouse.pos.y
+
+            elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS: # left
+                self.white_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                if scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS:
+                    self.white_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS:
+                    self.white_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                else:
+                    self.white_ball.pos.y = scene.mouse.pos.y
+
+            elif scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS: #up
+                self.white_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS:
+                    self.white_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS:
+                    self.white_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                else:
+                    self.white_ball.pos.x = scene.mouse.pos.x
+
+            elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS: #down
+                self.white_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS:
+                    self.white_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS:
+                    self.white_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                else:
+                    self.white_ball.pos.x = scene.mouse.pos.x 
+            else:
+                self.white_ball.pos = scene.mouse.pos
+
+        #YELLOW        
+        elif self.drag_yellow: # mouse button is down
+            if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS: #right
+                self.yellow_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                if scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS:
+                    self.yellow_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS:
+                    self.yellow_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                else:
+                    self.yellow_ball.pos.y = scene.mouse.pos.y
+
+            elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS: # left
+                self.yellow_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                if scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS:
+                    self.yellow_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS:
+                    self.yellow_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                else:
+                    self.yellow_ball.pos.y = scene.mouse.pos.y
+
+            elif scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS: #up
+                self.yellow_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS:
+                    self.yellow_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS:
+                    self.yellow_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                else:
+                    self.yellow_ball.pos.x = scene.mouse.pos.x
+
+            elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS: #down
+                self.yellow_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS:
+                    self.yellow_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS:
+                    self.yellow_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                else:
+                    self.yellow_ball.pos.x = scene.mouse.pos.x 
+            else:
+                self.yellow_ball.pos = scene.mouse.pos
+
+        #RED
+        elif self.drag_red: # mouse button is down
+            if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS: #right
+                self.red_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                if scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS:
+                    self.red_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS:
+                    self.red_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                else:
+                    self.red_ball.pos.y = scene.mouse.pos.y
+
+            elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS: # left
+                self.red_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                if scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS:
+                    self.red_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS:
+                    self.red_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                else:
+                    self.red_ball.pos.y = scene.mouse.pos.y
+
+            elif scene.mouse.pos.y >= SURFACE_WIDTH/2 - RADIUS: #up
+                self.red_ball.pos.y = SURFACE_WIDTH/2 - RADIUS
+                if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS:
+                    self.red_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS:
+                    self.red_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                else:
+                    self.red_ball.pos.x = scene.mouse.pos.x
+
+            elif scene.mouse.pos.y <= -SURFACE_WIDTH/2 + RADIUS: #down
+                self.red_ball.pos.y = -SURFACE_WIDTH/2 + RADIUS
+                if scene.mouse.pos.x >= SURFACE_LENGTH/2 - RADIUS:
+                    self.red_ball.pos.x = SURFACE_LENGTH/2 - RADIUS
+                elif scene.mouse.pos.x <= -SURFACE_LENGTH/2 + RADIUS:
+                    self.red_ball.pos.x = -SURFACE_LENGTH/2 + RADIUS
+                else:
+                    self.red_ball.pos.x = scene.mouse.pos.x 
+            else:
+                self.red_ball.pos = scene.mouse.pos
+        self.updateP()
+
+
+            
+    def up(self):
+        self.drag_white = False
+        self.drag_yellow = False
+        self.drag_red = False
+
 # class Physics():
 #     def __init__(self):
 #         pass
+    def updateP(self):
+        self.white_ball.P = self.white_ball.pos
+        self.yellow_ball.P = self.yellow_ball.pos
+        self.red_ball.P = self.red_ball.pos
 
     def get_init(self, ball):
         ball_init = [ball.P, ball.v, ball.w, ball.u]
