@@ -102,7 +102,7 @@ class Carom:
         difficulty = - self.rail_col
         position_reward = self.get_total_distance()
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
-        return np.array(self.state), reward, done, {}, difficulty, position_reward
+        return np.array(self.state), reward, done, {}#, difficulty, position_reward
 
     def stepx(self, action):
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
