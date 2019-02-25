@@ -60,7 +60,8 @@ class Carom:
         # phi = action*5
         # V = 5
         #DDGP
-        phi = np.clip(action, -180, 180)[0]
+        #phi = np.clip(action, -180, 180)[0]
+        phi = math.degrees(math.atan(self.yellow_ball.pos.y - self.white_ball.pos.y/(self.yellow_ball.pos.x - self.white_ball.pos.x))) + np.clip(action, -5, 5)[0]
         V = np.clip(action, 0, 6)[1]
         if type(rand) is np.ndarray:
             phi = phi + rand[0]
@@ -279,7 +280,7 @@ class Carom:
             
     def reset(self, pos_white = P0_WHITE, pos_yellow = P0_YELLOW, pos_red = P0_RED):
         #self.set_balls_init(pos_white, pos_yellow, pos_red)
-        self.set_balls_random()
+        self.set_balls_random_easy()
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         self.time = 0
         self.nb_coups = 0
@@ -359,7 +360,7 @@ class Carom:
         self.set_ball_spin(self.white_ball)
         self.set_ball_spin(self.yellow_ball)
         self.set_ball_spin(self.red_ball)
-
+    
     def set_balls_random(self):
         left = -SURFACE_LENGTH/2 + RADIUS
         right = -left
@@ -381,6 +382,18 @@ class Carom:
             distance_w_y = self.get_distance(pos_white, pos_yellow)
             distance_w_r = self.get_distance(pos_white, pos_red)
             distance_y_r = self.get_distance(pos_yellow, pos_red)
+        self.set_balls_init(pos_white, pos_yellow, pos_red)
+
+    def set_balls_random_easy(self):
+        pos_white = P0_WHITE #Juste pour mettre sous forme de vecteur
+        pos_yellow = P0_YELLOW
+        pos_red = P0_RED
+        pos_white.x = np.random.uniform(-SURFACE_LENGTH/2 + 6*RADIUS, -SURFACE_LENGTH/2 + 26*RADIUS)
+        pos_yellow.x = np.random.uniform(-10*RADIUS, 10*RADIUS)
+        pos_red.x = np.random.uniform(SURFACE_LENGTH/2 - 26*RADIUS, SURFACE_LENGTH/2 - 6*RADIUS)
+        pos_white.y = np.random.uniform(-SURFACE_WIDTH/2 + 11*RADIUS, SURFACE_WIDTH/2 - 11*RADIUS)
+        pos_yellow.y = np.random.uniform(-SURFACE_WIDTH/2 + 11*RADIUS, SURFACE_WIDTH/2 - 11*RADIUS)
+        pos_red.y = np.random.uniform(-SURFACE_WIDTH/2 + 11*RADIUS, SURFACE_WIDTH/2 - 11*RADIUS)
         self.set_balls_init(pos_white, pos_yellow, pos_red)
 
     def get_distance(self, pos1, pos2):
