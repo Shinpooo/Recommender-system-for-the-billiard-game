@@ -4,7 +4,7 @@ import math
 from gym import spaces
 from gym.utils import seeding
 from copy import deepcopy
-
+import matplotlib.pyplot as plt
 
 class Carom:
     
@@ -32,7 +32,7 @@ class Carom:
         box(canvas=self.episode_scene)
         self.observation_list = [(round(self.white_ball.P.x, 2),round(self.white_ball.P.y, 2),round(self.yellow_ball.P.x, 2),round(self.yellow_ball.P.y, 2),round(self.red_ball.P.x, 2),round(self.red_ball.P.y, 2))]
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
-        
+        self.reward_list = []
         low = np.array([
             -SURFACE_LENGTH/2 + RADIUS,
             -SURFACE_WIDTH/2 + RADIUS,
@@ -41,12 +41,9 @@ class Carom:
             -SURFACE_LENGTH/2 + RADIUS,
             -SURFACE_WIDTH/2 + RADIUS])
         #DDGP
-        #self.action_space = spaces.Box(low= -180, high=180, shape=(1,), dtype=np.float32)
-        #self.action_space = spaces.Box(low=np.array([-180, 0, 5, -0.5*RADIUS, -0.5*RADIUS]), high=np.array([180, 6, 30, 0.5*RADIUS, 0.5*RADIUS]), dtype=np.float32)
         self.action_space = spaces.Box(low=np.array([-180, 0]), high=np.array([180, 6]), dtype=np.float32)
-        #self.action_space = spaces.Box(low=np.array([-np.inf, np.inf]), high=np.array([-np.inf, np.inf]), dtype=np.float32)
         #DQN
-        #self.action_space = spaces.Discrete(360)
+        #self.action_space = spaces.Discrete(72)
         self.observation_space = spaces.Box(low = low, high = -low, dtype=np.float32)
 
     def seed(self, seed=None):
@@ -60,13 +57,9 @@ class Carom:
         # b = 0
         # theta = 10
         #DQN 
-        #phi = action
-        #V = 5
+        # phi = action*5
+        # V = 5
         #DDGP
-        #phi = np.clip(action, -180, 180)[0]
-        #V = np.clip(action, 0, 6)[1]
-        #print(action)
-        #phi = action[0]*1000
         phi = np.clip(action, -180, 180)[0]
         V = np.clip(action, 0, 6)[1]
         if type(rand) is np.ndarray:
@@ -84,9 +77,17 @@ class Carom:
         self.move_balls()
         self.nb_coups += 1
         reward = math.floor(self.yellow_col + self.red_col)
-        #reward = self.yellow_col + self.red_col
-        #if self.rail_col <= -2:
-        #    reward = 0#
+        # reward = self.yellow_col + self.red_col
+        # max_d_tot = SURFACE_LENGTH + SURFACE_WIDTH + sqrt(SURFACE_WIDTH**2 + SURFACE_LENGTH**2)
+        # r_d = 1 - self.get_total_distance()/max_d_tot
+        # if reward >= 0.5:
+        #     reward = 1 + r_d
+        # else:
+        #     reward = 0+r_d
+            
+        
+        # if self.rail_col <= -2:
+        #    reward = 0
         #reward = self.yellow_col + self.red_col
         # if reward == 0.5:
         #     reward = 0.1
@@ -95,8 +96,8 @@ class Carom:
         #     reward = 0
         # else:
         #     reward = 1*(1 - distance_after/distance_before)
-        if reward == 1:
-            print("Phi: %.2f, V: %.2f, a: %.4f, b: %.4f, Theta: %.2f"%(phi, V, a, b, theta))
+        # if reward == 1:
+        #     print("Phi: %.2f, V: %.2f, a: %.4f, b: %.4f, Theta: %.2f"%(phi, V, a, b, theta))
         done = bool(self.nb_coups == 1)
         difficulty = - self.rail_col
         position_reward = self.get_total_distance()
@@ -653,7 +654,7 @@ class Carom:
 
                 # ## TIME COLLISION WITH UP RAIL ##
                 p = P([ball.P.y - (SURFACE_WIDTH/2 - RADIUS), ball.v.y, -coef_y*g])
-                solutions = p.roots()
+                solutions = p.roots()   
                 real_solutions.extend([i for i in solutions if i.imag == 0])
                 length_added_sol = len([i for i in solutions if i.imag == 0])
                 EVENTS.extend([prefix + "UP_RAIL_COL" for i in range(length_added_sol)])
@@ -915,6 +916,7 @@ class Carom:
         return balls[0], balls[1], balls[2]
     
     def RAIL_COLLISION(self, ball, direction):
+        #METTRE A J LES EQUATIONS !!
         if direction == "left":
             n = vector(1,0,0)
         elif direction == "right":
