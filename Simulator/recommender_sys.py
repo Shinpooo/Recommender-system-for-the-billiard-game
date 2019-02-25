@@ -85,7 +85,7 @@ def B(b):
     scene.append_to_caption('\n\n')
     button(bind=B, text='Run')
 
-button(bind=B, text='Run')
+button(bind=B, text='Run ea')
 scene.append_to_caption('\n\n')
 # state = env.reset()
 # pos = env.arraystate2pos(state)
