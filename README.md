@@ -9,3 +9,7 @@ Run the main file, this should run a DQN agent learning to Carom on your browser
 
 ⚠️The code is very old and not organized at all. ⚠️
 
+## Simulator & Physics
+
+All the code related to the simulator and its physics is in `Simulator/carom.py`
+
