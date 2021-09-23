@@ -1,4 +1,4 @@
-from Constants import*
+from Simulator.Constants import*
 from numpy.polynomial import Polynomial as P
 import math
 from gym import spaces
@@ -43,25 +43,25 @@ class Carom:
         #DDGP
         #self.action_space = spaces.Box(low= -180, high=180, shape=(1,), dtype=np.float32)
         #self.action_space = spaces.Box(low=np.array([-180, 0, 5, -0.5*RADIUS, -0.5*RADIUS]), high=np.array([180, 6, 30, 0.5*RADIUS, 0.5*RADIUS]), dtype=np.float32)
-        self.action_space = spaces.Box(low=np.array([-180, 0]), high=np.array([180, 6]), dtype=np.float32)
+        # self.action_space = spaces.Box(low=np.array([-180, 0]), high=np.array([180, 6]), dtype=np.float32)
         #self.action_space = spaces.Box(low=np.array([-np.inf, np.inf]), high=np.array([-np.inf, np.inf]), dtype=np.float32)
         #DQN
-        #self.action_space = spaces.Discrete(360)
+        self.action_space = spaces.Discrete(360)
         self.observation_space = spaces.Box(low = low, high = -low, dtype=np.float32)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action, rand = [], a = 0, b = 0, theta = 10):
+    def stepx(self, action, rand = [], a = 0, b = 0, theta = 10):
         #print(action)
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         # a = 0
         # b = 0
         # theta = 10
         #DQN 
-        #phi = action
-        #V = 5
+        # phi = action
+        # V = 5
         #DDGP
         #phi = np.clip(action, -180, 180)[0]
         #V = np.clip(action, 0, 6)[1]
@@ -103,7 +103,7 @@ class Carom:
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         return np.array(self.state), reward, done, {}, difficulty, position_reward
 
-    def stepx(self, action):
+    def step(self, action):
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         #print(action)
         #action[0] = action[0]*600
@@ -111,10 +111,10 @@ class Carom:
         a = 0
         b = 0
         theta = 10
-        #phi = action[0]
-        #V = action[1]
-        phi = np.clip(action*600, -180, 180)[0]
-        V = np.clip(action*7, 0, 6)[1]
+        phi = action
+        V = 5
+        # phi = np.clip(action*600, -180, 180)[0]
+        # V = np.clip(action*7, 0, 6)[1]
         self.cue_to_ball(a, b, theta, phi, V)
         pos_white = self.white_ball.P
         pos_yellow = self.yellow_ball.P
@@ -127,7 +127,7 @@ class Carom:
         #reward = math.floor(self.yellow_col + self.red_col)
         reward = self.yellow_col + self.red_col
         done = bool(reward == 1)
-        self.set_balls_init(pos_white, pos_yellow, pos_red)
+        #self.set_balls_init(pos_white, pos_yellow, pos_red)
         self.state = (self.white_ball.P.x, self.white_ball.P.y, self.yellow_ball.P.x, self.yellow_ball.P.y, self.red_ball.P.x, self.red_ball.P.y)
         return np.array(self.state), reward, done, {}
 

@@ -1,14 +1,14 @@
 import gym
 import numpy as np
-from keras.layers import Activation, Concatenate, Dense, Flatten, Input
-from keras.models import Model, Sequential
-from keras.optimizers import Adam
+from tensorflow.keras.layers import Activation, Concatenate, Dense, Flatten, Input
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.optimizers import Adam
 from rl.agents import DDPGAgent
 from rl.memory import *
 from carom import Carom
 
 ENV_NAME = 'Carom-v0'
-gym.undo_logger_setup()
+# gym.undo_logger_setup()
 
 
 # Get the environment and extract the number of actions.
